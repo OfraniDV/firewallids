@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const { Telegraf } = require('telegraf');
+const { Telegraf, TelegramError } = require('telegraf');
 const { menuOptions } = require('./commands/menu');
 const { comandosOptions } = require('./commands/comandos/comandos');
 const { md } = require('telegram-escape')
@@ -40,5 +40,9 @@ bot.command('comandos', (ctx) => {
   return ctx.reply('Aquí están los comandos:', comandosOptions);
 });
 
+bot.catch(err => {
+  if (!(err instanceof TelegramError)) throw err
+  console.error(err)
+})
 
 bot.launch();
