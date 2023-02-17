@@ -13,7 +13,7 @@ bot.start(async (ctx) => {
 
   if (chatType === 'private') {
     const message = `*Hola, ${firstName}! 👋*\n\n` +
-      `_${'Tu ID de Telegram es: ' + userId}_\n\n` +
+      `Tu ID de Telegram es: \`${userId}\`\n\n` +
       `*Bienvenid@ a Reputación Plus (BR+)!🤖*\n\n` +
       `Nuestro objetivo principal es proteger a los grupos de Telegram contra la delincuencia cibernética. Además, también brinda una gestión segura para administrar los grupos y verificación de usuarios a través de KYC (Conozca a su Cliente).\n\n` +
       `Si estás verificado en nuestro sistema, también tendrás acceso a servicios avanzados para negociaciones. 🚀\n\n` +
