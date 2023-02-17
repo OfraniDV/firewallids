@@ -31,13 +31,13 @@ bot.start(async (ctx) => {
 
 
 // Comando para mostrar el menú inline
-bot.command('ayuda', (ctx) => {
-  ctx.reply('Por favor selecciona una opción:', menuOptions);
+bot.command('ayuda', async (ctx) => {
+  return ctx.reply('Por favor selecciona una opción:', menuOptions);
 });
 
 // Manejador de comando /comandos
 bot.command('comandos', (ctx) => {
-  ctx.reply('Aquí están los comandos:', comandosOptions);
+  return ctx.reply('Aquí están los comandos:', comandosOptions);
 });
 
 
