@@ -40,6 +40,10 @@ bot.command('comandos', (ctx) => {
   return ctx.reply('Aquí están los comandos:', comandosOptions);
 });
 
+bot.action('comandos', (ctx) => {
+  return ctx.editMessageText('Aquí están los comandos:', comandosOptions);
+});
+
 bot.catch(err => {
   if (!(err instanceof TelegramError)) throw err
   console.error(err)
