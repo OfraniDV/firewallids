@@ -28,20 +28,16 @@ bot.start(async (ctx) => {
 })
 
 
-
-
-
-
-
-
-
-
-
-
-
 // Comando para mostrar el menú inline
 bot.command('ayuda', (ctx) => {
   ctx.reply('Por favor selecciona una opción:', menuOptions);
 });
+
+// Manejador de comando /comandos
+bot.command('comandos', (ctx) => {
+  const { comandosOptions } = require('./commands/comandos/comandos');
+  ctx.reply('Aquí están los comandos:', comandosOptions);
+});
+
 
 bot.launch();
