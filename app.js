@@ -31,7 +31,7 @@ bot.start(async (ctx) => {
 
 
 // Comando para mostrar el menú inline
-bot.command('ayuda', async (ctx) => {
+bot.command('ayuda', (ctx) => {
   return ctx.reply('Por favor selecciona una opción:', menuOptions);
 });
 
