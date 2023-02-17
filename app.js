@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const { Telegraf } = require('telegraf');
 const { menuOptions } = require('./commands/menu');
+const { comandosOptions } = require('./commands/comandos/comandos');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -35,7 +36,6 @@ bot.command('ayuda', (ctx) => {
 
 // Manejador de comando /comandos
 bot.command('comandos', (ctx) => {
-  const { comandosOptions } = require('./commands/comandos/comandos');
   ctx.reply('Aquí están los comandos:', comandosOptions);
 });
 
