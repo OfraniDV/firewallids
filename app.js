@@ -3,6 +3,7 @@ require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const { menuOptions } = require('./commands/menu');
 const { comandosOptions } = require('./commands/comandos/comandos');
+const { md } = require('telegram-escape')
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -13,7 +14,7 @@ bot.start(async (ctx) => {
   const userId = ctx.message.from.id
 
   if (chatType === 'private') {
-    const message = `*Hola, ${firstName}! 👋*\n\n` +
+    const message = md`*Hola, ${escapeMarkdown(firstName)}! 👋*\n\n` +
       `Tu ID de Telegram es: \`${userId}\`\n\n` +
       `*Bienvenid@ a Reputación Plus (BR+)!🤖*\n\n` +
       `Nuestro objetivo principal es proteger a los grupos de Telegram contra la delincuencia cibernética. Además, también brinda una gestión segura para administrar los grupos y verificación de usuarios a través de KYC (Conozca a su Cliente).\n\n` +
