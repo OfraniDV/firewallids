@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "start": "node ./app.js",
+    "dev": "nodemon ./app.js"
+  },
   "dependencies": {
     "cli-columns": "^4.0.0",
     "dotenv": "^16.0.3",
