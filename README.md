@@ -1,4 +1,3 @@
-FirewallIDs
 FirewallIDs es un bot de Telegram que tiene como objetivo principal proteger a los grupos de Telegram contra la delincuencia cibernética. Además, también brinda una gestión segura para administrar los grupos y verificación de usuarios a través de KYC (Conozca a su Cliente).
 
 En un futuro próximo, también permitirá la creación de negocios entre usuarios verificados en el bot.
