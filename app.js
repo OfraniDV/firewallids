@@ -35,20 +35,21 @@ bot.start(async (ctx) => {
   const userId = ctx.message.from.id
 
   if (chatType === 'private') {
-    const message = md`Hola cómo estás, ${escapeMarkdown(firstName)}! 👋\n\n` +
+    const message = md`¡Hola! ¿Cómo estás, ${escapeMarkdown(firstName)}? 👋\n\n` +
       `Tu ID en Telegram es: \`${userId}\`\n\n` +
-      `Bienvenido a Reputación Plus (BR+)!🤖\n\n` +
+      `¡Bienvenido a FirewallIDs! 🔥🛡️\n\n` +
       `Nuestro objetivo principal es proteger a los grupos de Telegram contra la delincuencia cibernética. Además, brindamos una gestión segura para administrar los grupos y verificación de usuarios a través de KYC (Conozca a su Cliente).\n\n` +
       `Si estás verificado en nuestro sistema, también tendrás acceso a servicios avanzados para negociaciones. 🚀\n\n` +
       `Si necesitas ayuda, escribe el comando /ayuda.\n\n` +
-      `¿En qué podemos ayudarte hoy?👨‍💼`
+      `¿En qué podemos ayudarte hoy? 👨‍💼`
 
     await ctx.replyWithMarkdown(message)
   } else {
     // Si el comando /start es ejecutado en un grupo, responder por privado al usuario
-    await ctx.reply('Hola! Este comando solo puede ser ejecutado en el chat privado con el bot.')
+    await ctx.reply('Lo siento, este comando solo puede ser ejecutado en el chat privado.')
   }
 })
+
 
 
 // Comando para mostrar el menú inline
