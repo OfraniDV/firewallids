@@ -11,6 +11,11 @@ const { negociosOptions } = require('./commands/negocios/negocios');
 //Sobre la DB
 const { pool } = require('./psql/db');
 const { agregarUsuario } = require('./psql/dblogic');
+const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
+const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
+
+
+
 
 const { md, escapeMarkdown } = require('telegram-escape')
 
@@ -171,13 +176,119 @@ ctx.replyWithHTML(`Para ver nuestras Reglas, da clic <a href="${rules}">aquí</a
 
 
 /*****************************************************************/
-//Boton del Menu Para Usuarios
+//Boton y comando Cambios del Menu Para Usuarios
 bot.action('cambios', (ctx) => {
   const message = `📝 Con el comando /cambios puedes consultar los cambios de alias y/o de nombres que ha tenido un usuario en el pasado. Simplemente escribe /cambios seguido del ID de usuario o del @alias del usuario que quieres consultar. El informe detallado se mostrará cronológicamente y te indicará los cambios que ha tenido tanto en su nombre como en su @alias.
 
 Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡Gracias por usar nuestro bot! 🤖`;
   ctx.reply(message);
 });
+
+bot.command('cambios', async (ctx) => {
+  const message = ctx.message.text.split(' ');
+  const id = message[1];
+  const alias = message[1];
+
+  let userId;
+  let username;
+
+  if (id) {
+    // Buscar el ID en la tabla de usuarios
+    const user = await buscarUsuarioPorId(id);
+
+    if (user) {
+      userId = user.id;
+      username = user.username;
+
+      // Verificar repeticiones de ID en la tabla de monitorización de nombres
+      const countNombres = await verificarRepeticionesIDNombres(userId);
+
+      // Verificar repeticiones de ID en la tabla de monitorización de usuarios
+      const countUsuarios = await verificarRepeticionesIDUsuarios(userId);
+
+      let reporte = `El usuario con ID ${id} (${alias ? `@${alias} ` : ''}) ha tenido ${countNombres} cambio(s) de nombre`;
+
+      if (countUsuarios) {
+        reporte += ` y ${countUsuarios} cambio(s) de @alias`;
+      }
+
+      ctx.reply(reporte);
+    } else {
+      ctx.reply('No se encontró un usuario con ese ID');
+    }
+  } else if (alias) {
+    // Buscar el alias en la tabla de usuarios
+    const user = await buscarUsuarioPorAlias(alias);
+
+    if (user) {
+      userId = user.id;
+      username = user.username;
+
+      // Verificar repeticiones de ID en la tabla de monitorización de nombres
+      const countNombres = await verificarRepeticionesIDNombres(userId);
+
+      // Verificar repeticiones de ID en la tabla de monitorización de usuarios
+      const countUsuarios = await verificarRepeticionesIDUsuarios(userId);
+
+      let reporte = `El usuario con ID ${userId} (@${alias}) ha tenido ${countNombres} cambio(s) de nombre`;
+
+      if (countUsuarios) {
+        reporte += ` y ${countUsuarios} cambio(s) de @alias`;
+      }
+
+      ctx.reply(reporte);
+    } else {
+      ctx.reply(`No se encontró un usuario con el @alias @${alias}`);
+    }
+  } else {
+    // Si no se proporciona un ID o alias, buscar el historial del usuario que ejecutó el comando
+    const user = ctx.message.from;
+
+    userId = user.id;
+    username = user.username;
+
+    // Verificar repeticiones de ID en la tabla de monitorización de nombres
+    const countNombres = await verificarRepeticionesIDNombres(userId);
+
+    // Verificar repeticiones de ID en la tabla de monitorización de usuarios
+    const countUsuarios = await verificarRepeticionesIDUsuarios(userId);
+
+    let reporte = `Tu historial de cambios de nombre es de ${countNombres} cambio(s)`;
+
+    if (countUsuarios) {
+      reporte += ` y ${countUsuarios} cambio(s) de @alias`;
+    }
+
+    ctx.reply(reporte);
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Demas Botones *************************************************************************************
 
 // Acción para el botón de Ayuda
 bot.action('ayuda', (ctx) => {
