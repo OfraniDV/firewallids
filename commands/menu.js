@@ -1,8 +1,4 @@
 const { Markup } = require('telegraf');
-const { comandosOptions } = require('../commands/comandos/comandos');
-
-// Importamos bot desde app.js por si se necesita
-const bot = require('../app');
 
 // Creamos un objeto con las opciones del menú
 const menuOptions = Markup.inlineKeyboard([
