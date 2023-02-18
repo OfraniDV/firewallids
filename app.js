@@ -77,12 +77,34 @@ bot.action('comandos_usuarios', (ctx) => {
 });
 
 // Manejador de acción para el botón "Regresar" del menú de usuarios o Administradores
-bot.action('menu_anterior', (ctx) => {
+let comandosMessageId; // variable para guardar el message_id del mensaje del menú de comandos
+let submenuMessageId; // variable para guardar el message_id del mensaje del submenú
+
+// Manejador de acción para el botón "Usuarios" del menú de comandos
+bot.action('usuarios', async (ctx) => {
   // Eliminar el mensaje actual
-  ctx.deleteMessage();
-  // Mostrar el menú de comandos
-  ctx.reply('Regresando al menú de comandos...', comandosOptions);
+  await ctx.deleteMessage();
+
+  // Mostrar el submenú de usuarios
+  const submenuMessage = await ctx.reply('Selecciona una opción:', comandosUsuariosOptions);
+  submenuMessageId = submenuMessage.message_id; // guardar el message_id del mensaje del submenú
 });
+
+// Manejador de acción para el botón "Regresar" del menú de usuarios
+bot.action('menu_anterior', async (ctx) => {
+  // Eliminar los mensajes anteriores (menú de comandos y submenú)
+  await ctx.deleteMessage(comandosMessageId);
+  await ctx.deleteMessage(submenuMessageId);
+
+  // Mostrar el menú de comandos
+  const comandosMessage = await ctx.reply('Selecciona una opción:', comandosOptions);
+  comandosMessageId = comandosMessage.message_id; // guardar el message_id del mensaje del menú de comandos
+});
+
+
+
+
+
 
 
 // Manejador de acción para el botón "Para Adminstradores"
