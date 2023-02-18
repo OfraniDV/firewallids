@@ -8,9 +8,6 @@ const { comandosUsuariosOptions } = require('./commands/comandos/usuarios');
 const { administradoresOptions } = require('./commands/comandos/admins');
 const { negociosOptions } = require('./commands/negocios/negocios');
 
-
-
-
 //Sobre la DB
 const { pool } = require('./psql/db');
 const { agregarUsuario } = require('./psql/dblogic');
@@ -152,13 +149,82 @@ ctx.replyWithHTML(`Para ver nuestras Reglas, da clic <a href="${rules}">aquí</a
 
 
 /*****************************************************************/
-//Boton Cambios de Menu Para Usuarios
+//Boton del Menu Para Usuarios
 bot.action('cambios', (ctx) => {
   const message = `📝 Con el comando /cambios puedes consultar los cambios de alias y/o de nombres que ha tenido un usuario en el pasado. Simplemente escribe /cambios seguido del ID de usuario o del @alias del usuario que quieres consultar. El informe detallado se mostrará cronológicamente y te indicará los cambios que ha tenido tanto en su nombre como en su @alias.
 
 Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡Gracias por usar nuestro bot! 🤖`;
   ctx.reply(message);
 });
+
+// Acción para el botón de Ayuda
+bot.action('ayuda', (ctx) => {
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar mensaje de ayuda
+  ctx.reply('Aquí puedes encontrar ayuda sobre el uso del bot y sus comandos.', comandosUsuariosOptions);
+});
+
+// Acción para el botón de Reputación
+bot.action('reputacion', (ctx) => {
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar mensaje de reputación
+  ctx.reply('Aquí puedes encontrar información sobre tu reputación en el grupo y cómo mejorarla.', comandosUsuariosOptions);
+});
+
+// Acción para el botón de Buscar
+bot.action('buscar', (ctx) => {
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar mensaje de búsqueda
+  ctx.reply('Aquí puedes buscar mensajes antiguos en el grupo.', comandosUsuariosOptions);
+});
+
+// Acción para el botón de RepuInfo
+bot.action('repuinfo', (ctx) => {
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar mensaje de información de reputación
+  ctx.reply('Aquí puedes encontrar información detallada sobre el sistema de reputación del grupo.', comandosUsuariosOptions);
+});
+
+// Acción para el botón de RepuPositiva
+bot.action('repupositiva', (ctx) => {
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar mensaje de reputación positiva
+  ctx.reply('Aquí puedes enviar una reputación positiva a un usuario del grupo.', comandosUsuariosOptions);
+});
+
+// Acción para el botón de RepuNegativa
+bot.action('repunegativa', (ctx) => {
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar mensaje de reputación negativa
+  ctx.reply('Aquí puedes enviar una reputación negativa a un usuario del grupo.', comandosUsuariosOptions);
+});
+
+// Acción para el botón de KYC
+bot.action('kyc', (ctx) => {
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar mensaje de KYC
+  ctx.reply('Aquí puedes enviar la documentación necesaria para verificar tu identidad en el grupo.', comandosUsuariosOptions);
+});
+
+// Acción para el botón de TYC
+bot.action('tyc', (ctx) => {
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar mensaje de TYC
+  ctx.reply('Aquí puedes encontrar los términos y condiciones de uso del bot y del grupo.', comandosUsuariosOptions);
+});
+
+
+
+/****************************************************************/
+
 
 
 
