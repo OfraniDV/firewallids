@@ -1,7 +1,9 @@
 require('dotenv').config();
 
-const { Telegraf } = require('telegraf');
+const { Telegraf, TelegramError } = require('telegraf');
 const { menuOptions } = require('./commands/menu');
+const { comandosOptions } = require('./commands/comandos/comandos');
+const { md } = require('telegram-escape')
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -12,7 +14,7 @@ bot.start(async (ctx) => {
   const userId = ctx.message.from.id
 
   if (chatType === 'private') {
-    const message = `*Hola, ${firstName}! 👋*\n\n` +
+    const message = md`*Hola, ${escapeMarkdown(firstName)}! 👋*\n\n` +
       `Tu ID de Telegram es: \`${userId}\`\n\n` +
       `*Bienvenid@ a Reputación Plus (BR+)!🤖*\n\n` +
       `Nuestro objetivo principal es proteger a los grupos de Telegram contra la delincuencia cibernética. Además, también brinda una gestión segura para administrar los grupos y verificación de usuarios a través de KYC (Conozca a su Cliente).\n\n` +
@@ -30,14 +32,21 @@ bot.start(async (ctx) => {
 
 // Comando para mostrar el menú inline
 bot.command('ayuda', (ctx) => {
-  ctx.reply('Por favor selecciona una opción:', menuOptions);
+  return ctx.reply('Por favor selecciona una opción:', menuOptions);
 });
 
 // Manejador de comando /comandos
 bot.command('comandos', (ctx) => {
-  const { comandosOptions } = require('./commands/comandos/comandos');
-  ctx.reply('Aquí están los comandos:', comandosOptions);
+  return ctx.reply('Aquí están los comandos:', comandosOptions);
 });
 
+bot.action('comandos', (ctx) => {
+  return ctx.editMessageText('Aquí están los comandos:', comandosOptions);
+});
+
+bot.catch(err => {
+  if (!(err instanceof TelegramError)) throw err
+  console.error(err)
+})
 
 bot.launch();
