@@ -150,6 +150,19 @@ ctx.replyWithHTML(`Para ver nuestras Reglas, da clic <a href="${rules}">aquí</a
 });
 
 
+// Manejador de acción para el botón de cambios
+bot.action('cambios', (ctx) => {
+  // Enviar mensaje explicando el uso del comando cambios
+  ctx.reply('ℹ️ Puedes usar el comando /cambios seguido del ID o alias de un usuario para ver su historial de cambios de nombre y alias. El informe se mostrará ordenado cronológicamente según los registros que tengamos en nuestra base de datos en las tablas de monitorización.');
+});
+
+
+
+
+
+
+
+
 //***************************************************************************************************************************************** */
 
 
