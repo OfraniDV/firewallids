@@ -299,7 +299,7 @@ bot.action('menu_principal', (ctx) => {
 // Manejador de acción para el botón "Salir"
 bot.action('salir', (ctx) => {
   // Muestra un mensaje de despedida y agradecimiento
-  ctx.reply('No dudes en regresar a nuestro menú principal cuando quieras. Estamos aquí para ayudarte en lo que necesites. ¡Gracias por usar Reputación Plus (BR+)! 😊');
+  ctx.reply('No dudes en regresar a nuestro menú principal cuando quieras. Estamos aquí para ayudarte en lo que necesites. ¡Gracias por usar FirewallIds! 😊');
   
   // Cierra el menú de comandos
   ctx.editMessageText('Has cerrado el menú de comandos.');
