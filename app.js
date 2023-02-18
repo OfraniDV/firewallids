@@ -35,7 +35,7 @@ bot.start(async (ctx) => {
   const userId = ctx.message.from.id
 
   if (chatType === 'private') {
-    const message = md`¡Hola! ¿Cómo estás, ${escapeMarkdown(firstName)}? 👋\n\n` +
+    const message = md`¡Hola! ¿Cómo estás, ${escapeMarkdown(firstName)}? 👋    ` +`\n\n`
       `Tu ID en Telegram es: \`${userId}\`\n\n` +
       `¡Bienvenido a FirewallIDs! 🔥🛡️\n\n` +
       `Nuestro objetivo principal es proteger a los grupos de Telegram contra la delincuencia cibernética. Además, brindamos una gestión segura para administrar los grupos y verificación de usuarios a través de KYC (Conozca a su Cliente).\n\n` +
