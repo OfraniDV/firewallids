@@ -79,8 +79,12 @@ bot.action('comandos_usuarios', (ctx) => {
 
 // Manejador de acción para el botón "Regresar" del menú de usuarios o Administradores
 bot.action('menu_anterior', (ctx) => {
-  ctx.editMessageText('Regresando al menú de comandos...', comandosOptions);
+  // Eliminar el mensaje actual
+  ctx.deleteMessage();
+  // Mostrar el menú de comandos
+  ctx.reply('Regresando al menú de comandos...', comandosOptions);
 });
+
 
 // Manejador de acción para el botón "Para Adminstradores"
 bot.action('comandos_administradores', (ctx) => {
