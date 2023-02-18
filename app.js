@@ -3,7 +3,7 @@ require('dotenv').config();
 const { Telegraf, TelegramError } = require('telegraf');
 const { menuOptions } = require('./commands/menu');
 const { comandosOptions } = require('./commands/comandos/comandos');
-const { md } = require('telegram-escape')
+const { md, escapeMarkdown } = require('telegram-escape')
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
