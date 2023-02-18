@@ -26,9 +26,33 @@ const rules  = process.env.BOT_RULES;
 
 
 
-
- 
 // Cuando el usuario ejecuta el comando /start en el chat privado del bot
+bot.start((ctx) => {
+  const { first_name, id } = ctx.from;
+  const saludos = `👋 Hola ${first_name}!\n\n`;
+  const id_mensaje = `🆔 Este es tu ID en Telegram: ${id}\n\n`;
+
+  const firewallids = `🛡️ ¡Bienvenido a FirewallIds! Somos un servicio de seguridad en línea que se enfoca en la protección de tus datos personales y la prevención de actividades cibernéticas maliciosas.\n\n`;
+  const ayuda = `🤖 Puedo ayudarte si ejecutas el comando /ayuda.\n`;
+  const mensaje = `${saludos}${id_mensaje}${firewallids}${ayuda}`;
+
+  if (ctx.chat.type === 'private') {
+    return ctx.reply(mensaje);
+  } else {
+    const bot_username = ctx.botInfo.username;
+    const enlace = `https://t.me/${bot_username}?start=start`;
+    const mensaje_denegado = `🚫 Acceso denegado. Este comando solo puede ser ejecutado en el chat privado.\n\n🤖 Si deseas interactuar conmigo, haz clic en este enlace para abrir un chat privado: ${enlace}`;
+    return ctx.reply(mensaje_denegado);
+  }
+});
+
+
+
+
+
+
+
+//Menus y Comandos del Bot***************************************************
 
 // Comando para mostrar el menú inline
 bot.command('ayuda', (ctx) => {
