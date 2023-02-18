@@ -8,7 +8,12 @@ const { comandosUsuariosOptions } = require('./commands/comandos/usuarios');
 const { administradoresOptions } = require('./commands/comandos/admins');
 const { negociosOptions } = require('./commands/negocios/negocios');
 
+
+
+//Sobre la DB
 const { pool } = require('./psql/db');
+const { agregarUsuario } = require('./psql/dblogic');
+
 
 
 const { md, escapeMarkdown } = require('telegram-escape')
@@ -28,23 +33,20 @@ const rules  = process.env.BOT_RULES;
 
 // Cuando el usuario ejecuta el comando /start en el chat privado del bot
 bot.start((ctx) => {
-  const { first_name, id } = ctx.from;
-  const saludos = `👋 Hola ${first_name}!\n\n`;
-  const id_mensaje = `🆔 Este es tu ID en Telegram: ${id}\n\n`;
+  // Obtener el ID y nombre del usuario
+  const id = ctx.from.id;
+  const nombre = ctx.from.first_name;
 
-  const firewallids = `🛡️ ¡Bienvenido a FirewallIds! Somos un servicio de seguridad en línea que se enfoca en la protección de tus datos personales y la prevención de actividades cibernéticas maliciosas.\n\n`;
-  const ayuda = `🤖 Puedo ayudarte si ejecutas el comando /ayuda.\n`;
-  const mensaje = `${saludos}${id_mensaje}${firewallids}${ayuda}`;
+  // Agregar el usuario a la base de datos
+  agregarUsuario(id, nombre);
 
-  if (ctx.chat.type === 'private') {
-    return ctx.reply(mensaje);
-  } else {
-    const bot_username = ctx.botInfo.username;
-    const enlace = `https://t.me/${bot_username}?start=start`;
-    const mensaje_denegado = `🚫 Acceso denegado. Este comando solo puede ser ejecutado en el chat privado.\n\n🤖 Si deseas interactuar conmigo, haz clic en este enlace para abrir un chat privado: ${enlace}`;
-    return ctx.reply(mensaje_denegado);
-  }
+  // Enviar mensaje de bienvenida
+  ctx.reply(`👋 Hola ${nombre}!\n\n🆔 Este es tu ID en Telegram: ${id}\n\n🛡️ ¡Bienvenido a FirewallIds! Somos un servicio de seguridad en línea que se enfoca en la protección de tus datos personales y la prevención de actividades cibernéticas maliciosas.\n\n🤖 Puedo ayudarte si ejecutas el comando /ayuda.`);
 });
+
+
+
+
 
 
 
