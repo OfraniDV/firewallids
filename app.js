@@ -10,15 +10,15 @@ const { negociosOptions } = require('./commands/negocios/negocios');
 
 
 
+
 //Sobre la DB
 const { pool } = require('./psql/db');
 const { agregarUsuario } = require('./psql/dblogic');
 
-
-
 const { md, escapeMarkdown } = require('telegram-escape')
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
 const urlKyc = process.env.URL_KYC;
 const urlWeb = process.env.URL_WEB;
 const gDenun = process.env.ID_GROUP_DENUNCIAS;
@@ -150,11 +150,27 @@ ctx.replyWithHTML(`Para ver nuestras Reglas, da clic <a href="${rules}">aquí</a
 });
 
 
-// Manejador de acción para el botón de cambios
+
+/*****************************************************************/
+//Boton Cambios de Menu Para Usuarios
 bot.action('cambios', (ctx) => {
-  // Enviar mensaje explicando el uso del comando cambios
-  ctx.reply('ℹ️ Puedes usar el comando /cambios seguido del ID o alias de un usuario para ver su historial de cambios de nombre y alias. El informe se mostrará ordenado cronológicamente según los registros que tengamos en nuestra base de datos en las tablas de monitorización.');
+  const message = `📝 Con el comando /cambios puedes consultar los cambios de alias y/o de nombres que ha tenido un usuario en el pasado. Simplemente escribe /cambios seguido del ID de usuario o del @alias del usuario que quieres consultar. El informe detallado se mostrará cronológicamente y te indicará los cambios que ha tenido tanto en su nombre como en su @alias.
+
+Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡Gracias por usar nuestro bot! 🤖`;
+  ctx.reply(message);
 });
+
+
+
+/*************************************************************************/
+
+
+
+
+
+
+
+
 
 
 
