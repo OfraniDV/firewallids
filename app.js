@@ -5,7 +5,7 @@ const { Telegraf, TelegramError } = require('telegraf');
 const { menuOptions } = require('./commands/menu');
 const { comandosOptions } = require('./commands/menus/comandos');
 const { comandosUsuariosOptions } = require('./commands/menus/usuarios');
-const { administradoresOptions } = require('./commands/menus/admins');
+const { administradoresOptions } = require('./commands/menus/comandos/admins');
 
 
 
