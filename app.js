@@ -2,11 +2,17 @@ require('dotenv').config();
 
 const { Telegraf, TelegramError } = require('telegraf');
 
+
+// Importar comandos
 const { menuOptions } = require('./commands/menu');
 const { comandosOptions } = require('./commands/comandos/comandos');
 const { comandosUsuariosOptions } = require('./commands/comandos/usuarios');
 const { administradoresOptions } = require('./commands/comandos/admins');
 const { negociosOptions } = require('./commands/negocios/negocios');
+const cambUsuarios = require('./commands/cambusuarios');
+const cambNombres = require('./commands/cambnombres');
+
+
 
 //Sobre la DB
 const { pool } = require('./psql/db');
@@ -15,8 +21,6 @@ const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
-
-
 
 
 const { md, escapeMarkdown } = require('telegram-escape')
@@ -190,9 +194,14 @@ Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡
 // Manejador de comandos para /cambios
 //************************************************************************************/
 
+// Manejador de comandos para /cambios
 bot.command('cambios', async (ctx) => {
+  // Obtener información del usuario que ejecutó el comando
   const userId = ctx.message.from.id;
   let id = userId;
+  let nombreUsuario = ctx.message.from.first_name;
+
+  // Obtener ID si se proporcionó un alias de usuario
   if (ctx.message.text.split(' ').length > 1) {
     id = ctx.message.text.split(' ')[1];
     if (id.startsWith('@')) {
@@ -200,34 +209,16 @@ bot.command('cambios', async (ctx) => {
       const user = await ctx.telegram.getChat(username);
       id = user.id;
     }
+    const userInfo = await ctx.telegram.getChat(id);
+    nombreUsuario = userInfo.first_name;
   }
-  const numCambiosNombres = await verificarRepeticionesIDNombres(id);
-  const numCambiosUsuarios = await verificarRepeticionesIDUsuarios(id);
-  let cambiosNombres = [];
-  let cambiosUsuarios = [];
-  if (numCambiosNombres > 0) {
-    cambiosNombres = await buscarCambiosCronologicosNombres(id);
-  }
-  if (numCambiosUsuarios > 0) {
-    cambiosUsuarios = await buscarCambiosCronologicosUsuarios(id);
-  }
-  const message = `📝 El usuario ID:${id}, ${ctx.message.from.first_name}, ha tenido ${numCambiosNombres} cambios en su Nombre y ${numCambiosUsuarios} cambios en su @alias.\n\n`;
-  const cambiosNombresMessage = cambiosNombres.map((cambio) => {
-    const date = new Date(cambio.tiempo).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const time = new Date(cambio.tiempo).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    return `🗓️ ${date} ${time} - ${cambio.nombres}`;
-  }).join('\n');
-  const cambiosUsuariosMessage = cambiosUsuarios.map((cambio) => {
-    const date = new Date(cambio.tiempo).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const time = new Date(cambio.tiempo).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    return `🗓️ ${date} ${time} - ${cambio.username}`;
-  }).join('\n');
-  const response = message + `Cambios en el nombre:\n${cambiosNombresMessage}\n\nCambios en el @alias:\n${cambiosUsuariosMessage}`;
-  ctx.reply(response);
+
+  // Obtener el informe de cambios de usuario y mostrarlo
+  await cambUsuarios(ctx, id, nombreUsuario);
+
+  // Obtener el informe de cambios de nombre y mostrarlo
+  await cambNombres(ctx, id, nombreUsuario);
 });
-
-
-
 
 
 

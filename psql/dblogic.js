@@ -31,7 +31,7 @@ async function verificarRepeticionesIDNombres(id) {
 // Revizar la tabla Monitorizacion Usuarios
 async function verificarRepeticionesIDUsuarios(id) {
   const query = {
-    text: 'SELECT COUNT(*), fecha, tipo_cambio FROM monitorizacion_usuarios WHERE id = $1 GROUP BY fecha, tipo_cambio ORDER BY fecha ASC',
+    text: 'SELECT COUNT(*), tiempo, tipo_cambio FROM monitorizacion_usuarios WHERE id = $1 GROUP BY tiempo, tipo_cambio ORDER BY tiempo ASC',
     values: [id]
   };
 
@@ -60,7 +60,7 @@ async function buscarCambiosCronologicosNombres(id) {
 
 async function buscarCambiosCronologicosUsuarios(userId) {
   const query = {
-    text: 'SELECT fecha, tipo_cambio FROM monitorizacion_usuarios WHERE id = $1 ORDER BY fecha ASC',
+    text: 'SELECT tiempo, tipo_cambio FROM monitorizacion_usuarios WHERE id = $1 ORDER BY tiempo ASC',
     values: [userId]
   };
 
