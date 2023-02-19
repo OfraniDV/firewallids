@@ -45,10 +45,7 @@ bot.start((ctx) => {
   const id = ctx.from.id;
   const nombre = ctx.from.first_name;
 
-  // Agregar el usuario a la base de datos
-  agregarUsuario(id, nombre);
-
-  // Enviar mensaje de bienvenida
+ // Enviar mensaje de bienvenida
   ctx.reply(`👋 Hola ${nombre}!\n\n🆔 Este es tu ID en Telegram: ${id}\n\n🛡️ ¡Bienvenido a FirewallIds! Somos un servicio de seguridad en línea que se enfoca en la protección de tus datos personales y la prevención de actividades cibernéticas maliciosas.\n\n🤖 Puedo ayudarte si ejecutas el comando /ayuda.`);
 });
 
