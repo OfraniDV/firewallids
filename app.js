@@ -13,6 +13,8 @@ const { pool } = require('./psql/db');
 const { agregarUsuario } = require('./psql/dblogic');
 const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
+const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
+const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
 
 
 
@@ -184,83 +186,44 @@ Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡
   ctx.reply(message);
 });
 
+/********************************************************************************** */
+// Manejador de comandos para /cambios
+//************************************************************************************/
+
 bot.command('cambios', async (ctx) => {
-  const message = ctx.message.text.split(' ');
-  const id = message[1];
-  const alias = message[1];
-
-  let userId;
-  let username;
-
-  if (id) {
-    // Buscar el ID en la tabla de usuarios
-    const user = await buscarUsuarioPorId(id);
-
-    if (user) {
-      userId = user.id;
-      username = user.username;
-
-      // Verificar repeticiones de ID en la tabla de monitorización de nombres
-      const countNombres = await verificarRepeticionesIDNombres(userId);
-
-      // Verificar repeticiones de ID en la tabla de monitorización de usuarios
-      const countUsuarios = await verificarRepeticionesIDUsuarios(userId);
-
-      let reporte = `El usuario con ID ${id} (${alias ? `@${alias} ` : ''}) ha tenido ${countNombres} cambio(s) de nombre`;
-
-      if (countUsuarios) {
-        reporte += ` y ${countUsuarios} cambio(s) de @alias`;
-      }
-
-      ctx.reply(reporte);
-    } else {
-      ctx.reply('No se encontró un usuario con ese ID');
+  const userId = ctx.message.from.id;
+  let id = userId;
+  if (ctx.message.text.split(' ').length > 1) {
+    id = ctx.message.text.split(' ')[1];
+    if (id.startsWith('@')) {
+      const username = id.substring(1);
+      const user = await ctx.telegram.getChat(username);
+      id = user.id;
     }
-  } else if (alias) {
-    // Buscar el alias en la tabla de usuarios
-    const user = await buscarUsuarioPorAlias(alias);
-
-    if (user) {
-      userId = user.id;
-      username = user.username;
-
-      // Verificar repeticiones de ID en la tabla de monitorización de nombres
-      const countNombres = await verificarRepeticionesIDNombres(userId);
-
-      // Verificar repeticiones de ID en la tabla de monitorización de usuarios
-      const countUsuarios = await verificarRepeticionesIDUsuarios(userId);
-
-      let reporte = `El usuario con ID ${userId} (@${alias}) ha tenido ${countNombres} cambio(s) de nombre`;
-
-      if (countUsuarios) {
-        reporte += ` y ${countUsuarios} cambio(s) de @alias`;
-      }
-
-      ctx.reply(reporte);
-    } else {
-      ctx.reply(`No se encontró un usuario con el @alias @${alias}`);
-    }
-  } else {
-    // Si no se proporciona un ID o alias, buscar el historial del usuario que ejecutó el comando
-    const user = ctx.message.from;
-
-    userId = user.id;
-    username = user.username;
-
-    // Verificar repeticiones de ID en la tabla de monitorización de nombres
-    const countNombres = await verificarRepeticionesIDNombres(userId);
-
-    // Verificar repeticiones de ID en la tabla de monitorización de usuarios
-    const countUsuarios = await verificarRepeticionesIDUsuarios(userId);
-
-    let reporte = `Tu historial de cambios de nombre es de ${countNombres} cambio(s)`;
-
-    if (countUsuarios) {
-      reporte += ` y ${countUsuarios} cambio(s) de @alias`;
-    }
-
-    ctx.reply(reporte);
   }
+  const numCambiosNombres = await verificarRepeticionesIDNombres(id);
+  const numCambiosUsuarios = await verificarRepeticionesIDUsuarios(id);
+  let cambiosNombres = [];
+  let cambiosUsuarios = [];
+  if (numCambiosNombres > 0) {
+    cambiosNombres = await buscarCambiosCronologicosNombres(id);
+  }
+  if (numCambiosUsuarios > 0) {
+    cambiosUsuarios = await buscarCambiosCronologicosUsuarios(id);
+  }
+  const message = `📝 El usuario ID:${id}, ${ctx.message.from.first_name}, ha tenido ${numCambiosNombres} cambios en su Nombre y ${numCambiosUsuarios} cambios en su @alias.\n\n`;
+  const cambiosNombresMessage = cambiosNombres.map((cambio) => {
+    const date = new Date(cambio.tiempo).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const time = new Date(cambio.tiempo).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return `🗓️ ${date} ${time} - ${cambio.nombres}`;
+  }).join('\n');
+  const cambiosUsuariosMessage = cambiosUsuarios.map((cambio) => {
+    const date = new Date(cambio.tiempo).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const time = new Date(cambio.tiempo).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return `🗓️ ${date} ${time} - ${cambio.username}`;
+  }).join('\n');
+  const response = message + `Cambios en el nombre:\n${cambiosNombresMessage}\n\nCambios en el @alias:\n${cambiosUsuariosMessage}`;
+  ctx.reply(response);
 });
 
 
@@ -271,6 +234,8 @@ bot.command('cambios', async (ctx) => {
 
 
 
+
+/**********************************************************************************
 
 
 
