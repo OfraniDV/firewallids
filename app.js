@@ -27,6 +27,7 @@ const { md, escapeMarkdown } = require('telegram-escape')
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
+const bName = process.env.BOT_NAME;
 const urlKyc = process.env.URL_KYC;
 const urlWeb = process.env.URL_WEB;
 const gDenun = process.env.ID_GROUP_DENUNCIAS;
