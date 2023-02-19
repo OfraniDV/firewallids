@@ -9,8 +9,8 @@ const { comandosOptions } = require('./commands/comandos/comandos');
 const { comandosUsuariosOptions } = require('./commands/comandos/usuarios');
 const { administradoresOptions } = require('./commands/comandos/admins');
 const { negociosOptions } = require('./commands/negocios/negocios');
-const cambUsuarios = require('./commands/cambusuarios');
-const cambNombres = require('./commands/cambnombres');
+const cambUsuarios = require('./commands/cambios/cambusuarios');
+const cambNombres = require('./commands/cambios/cambnombres');
 
 
 
