@@ -199,16 +199,29 @@ bot.command('cambios', async (ctx) => {
   let nombreUsuario = ctx.message.from.first_name;
 
   // Obtener ID si se proporcionó un alias de usuario
-  if (ctx.message.text.split(' ').length > 1) {
-    id = ctx.message.text.split(' ')[1];
-    if (id.startsWith('@')) {
-      const username = id.substring(1);
-      const user = await ctx.telegram.getChat(username);
-      id = user.id;
+if (ctx.message.text.split(' ').length > 1) {
+  const input = ctx.message.text.split(' ')[1];
+  let user;
+  if (input.startsWith('@')) {
+    const username = input.substring(1);
+    try {
+      user = await ctx.telegram.getChat(username);
+    } catch (error) {
+      console.error(error);
     }
-    const userInfo = await ctx.telegram.getChat(id);
-    nombreUsuario = userInfo.first_name;
+  } else {
+    try {
+      user = await ctx.telegram.getChat(input);
+    } catch (error) {
+      console.error(error);
+    }
   }
+  if (user) {
+    id = user.id;
+    nombreUsuario = user.first_name;
+  }
+}
+
 
   // Obtener el informe de cambios de usuario y mostrarlo
   await cambUsuarios(ctx, id, nombreUsuario);

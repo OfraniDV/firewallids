@@ -15,8 +15,8 @@ module.exports = async (ctx) => {
         id = user.id;
         nombreUsuario = user.first_name;
       } catch (error) {
-        console.error(`Error al obtener la información del usuario: ${error}`);
-        ctx.reply('Lo siento, no he podido encontrar información para este usuario. Intente usar el ID del usuario.');
+        ctx.reply(`No pude encontrar al usuario con alias @${id.substring(1)}. Por favor intenta con un ID de usuario.`);
+        ctx.reply('¿Necesitas ayuda? Usa el comando /ayuda');
         return;
       }
     } else {
@@ -24,6 +24,8 @@ module.exports = async (ctx) => {
       nombreUsuario = userInfo.first_name;
     }
   }
+  
+
   const cambios = await buscarCambiosCronologicosUsuarios(id);
   const numCambios = cambios.length;
   const message = numCambios > 0 ? `📝 El usuario de ID ${id} se llama ${nombreUsuario} y ha tenido ${numCambios} cambios en su alias:\n\n` : `📝 No se encontraron cambios en el alias para el usuario de ID ${id}.\n\n`;

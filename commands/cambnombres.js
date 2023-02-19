@@ -24,6 +24,7 @@ module.exports = async (ctx) => {
       nombreUsuario = userInfo.first_name;
     }
   }
+
   const numCambios = await verificarRepeticionesIDNombres(id);
   let cambios = [];
   if (numCambios > 0) {
