@@ -18,7 +18,7 @@ const createCandidatosTable = require('./votacion/candidatos');
 const { votacionCommand } = require('./votacion/votacion');
 const { cancelarCommand } = require('./votacion/votacion');
 const { elegirCommand } = require('./votacion/elegir');
-const { createElegidosTable } = require('./votacion/elegidos')
+
 
 
 
@@ -26,7 +26,7 @@ const { createElegidosTable } = require('./votacion/elegidos')
 
 //Sobre la DB
 const { pool } = require('./psql/db');
-const { agregarUsuario } = require('./psql/dblogic');
+
 const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
@@ -43,7 +43,6 @@ createCandidatosTable();
 const { md, escapeMarkdown } = require('telegram-escape')
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-
 const urlKyc = process.env.URL_KYC;
 const urlWeb = process.env.URL_WEB;
 const gDenun = process.env.ID_GROUP_DENUNCIAS;
