@@ -6,6 +6,12 @@ function votacionCommand(ctx) {
   ctx.replyWithMarkdown(message);
 }
 
+// Comando para cancelar
+function cancelarCommand(ctx) {
+  ctx.reply('¡Hasta luego!');
+}
+
+
 module.exports = {
-  votacionCommand,
+  votacionCommand, cancelarCommand
 };
