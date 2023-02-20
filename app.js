@@ -11,6 +11,16 @@ const { administradoresOptions } = require('./commands/comandos/admins');
 const { negociosOptions } = require('./commands/negocios/negocios');
 const cambUsuarios = require('./commands/cambios/cambusuarios');
 const cambNombres = require('./commands/cambios/cambnombres');
+const { iniciarVotacionCommand } = require('./votacion/votaciontrue');
+const { desactivarVotacion } = require('./votacion/votacionfalse');
+const { postularmeCommand } = require('./votacion/postularme');
+const createCandidatosTable = require('./votacion/candidatos');
+const { votacionCommand } = require('./votacion/votacion');
+const { cancelarCommand } = require('./votacion/votacion');
+const { elegirCommand } = require('./votacion/elegir');
+const { createElegidosTable } = require('./votacion/elegidos')
+
+
 
 
 
@@ -21,6 +31,13 @@ const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
+
+
+
+// Funcion para crear la tabla Candidatos
+createCandidatosTable();
+
+
 
 
 const { md, escapeMarkdown } = require('telegram-escape')
@@ -50,16 +67,26 @@ bot.start((ctx) => {
 });
 
 
+// Sistema de Votacion **************************************************
+// Comando Para Iniciar Votacion
+bot.command('votaciontrue', iniciarVotacionCommand);
+// Comando Para Detener Votacion
+bot.command('votacionfalse', desactivarVotacion);
+// Comando Votacion
+bot.command('votacion', votacionCommand);
+// Comando para Postularse
+bot.command('postularme', postularmeCommand);
+// Comando para salir del menu de Votacion
+bot.command('cancelar', cancelarCommand);
+// Comando para elegir al Vice del Ceo
+bot.command('elegir', elegirCommand);
 
 
 
 
 
 
-
-
-
-//Menus y Comandos del Bot***************************************************
+//Menu Ayuda y Comandos del Bot***************************************************
 
 // Comando para mostrar el menú inline
 bot.command('ayuda', (ctx) => {
