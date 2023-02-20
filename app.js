@@ -21,7 +21,7 @@ const { elegirCommand } = require('./votacion/elegir');
 const elegir = require('./votacion/elegir');
 const { cleanCommand } = require('./votacion/clean');
 const { descandidatarseCommand } = require('./votacion/descandidatarse');
-
+const resultados = require('./votacion/resultados');
 
 
 
@@ -45,7 +45,7 @@ const { md, escapeMarkdown } = require('telegram-escape')
 
 //Variables de Entorno *********
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const owner = process.env.OWNER_ID;
+const owner = process.env.ID_USER_OWNER;
 
 
 
@@ -95,6 +95,8 @@ bot.command('cleanvotacion', (ctx) => {
 });
 // Comando para descandidatarse
 bot.command('descandidatarme', descandidatarseCommand);
+// Comando para mostrar los resultados de la votación
+bot.command('resultados', resultados.resultadosCommand);
 
 
 
