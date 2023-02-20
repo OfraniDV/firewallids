@@ -19,7 +19,7 @@ const { votacionCommand } = require('./votacion/votacion');
 const { cancelarCommand } = require('./votacion/votacion');
 const { elegirCommand } = require('./votacion/elegir');
 const elegir = require('./votacion/elegir');
-
+const { cleanCommand } = require('./votacion/clean');
 
 
 
@@ -42,7 +42,12 @@ createCandidatosTable();
 
 const { md, escapeMarkdown } = require('telegram-escape')
 
+//Variables de Entorno *********
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const owner = process.env.OWNER_ID;
+
+
+
 const urlKyc = process.env.URL_KYC;
 const urlWeb = process.env.URL_WEB;
 const gDenun = process.env.ID_GROUP_DENUNCIAS;
@@ -79,6 +84,15 @@ bot.command('postularme', postularmeCommand);
 bot.command('cancelar', cancelarCommand);
 // Comando para elegir al Vice del Ceo
 bot.command('elegir', (ctx) => elegir.elegirCommand(ctx, bot));
+// Comando Poderoso solo se debe usar cuando termina la Votacion
+bot.command('cleanvotacion', (ctx) => {
+  if (ctx.from.id == owner) {
+    cleanCommand(ctx);
+  } else {
+    ctx.reply('Este comando solo puede ser utilizado por el propietario del bot.');
+  }
+});
+
 
 
 
