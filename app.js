@@ -39,11 +39,10 @@ bot.start((ctx) => {
   const id = ctx.from.id;
   const nombre = ctx.from.first_name;
   const nombreBot = ctx.botInfo.first_name;
+  const msgBienvenida = "👋 Hola "+ nombre +"\n\n🆔 Este es tu ID en Telegram: " + id +"\n\n🛡️ ¡Bienvenido a " + nombreBot +" Somos un servicio de seguridad en línea que se enfoca en la protección de tus datos personales y la prevención de actividades cibernéticas maliciosas.\n\n🤖 Puedo ayudarte si ejecutas el comando /ayuda.";
 
   // Enviar mensaje de bienvenida
-  ctx.reply(
-    `👋 Hola ${nombre}!\n\n🆔 Este es tu ID en Telegram: ${id}\n\n🛡️ ¡Bienvenido a ${nombreBot}! Somos un servicio de seguridad en línea que se enfoca en la protección de tus datos personales y la prevención de actividades cibernéticas maliciosas.\n\n🤖 Puedo ayudarte si ejecutas el comando /ayuda.`
-  );
+  ctx.reply(msgBienvenida);
 });
 
 //Menus y Comandos del Bot***************************************************
@@ -63,6 +62,7 @@ bot.action("comandos", (ctx) => {
 
 bot.catch((err) => {
   if (!(err instanceof TelegramError)) throw err;
+  console.log(err);
   console.error(err);
 });
 
@@ -77,6 +77,7 @@ bot.action("comandos_usuarios", (ctx) => {
 // Manejador de acción para el botón "Regresar" del menú de usuarios o Administradores
 let comandosMessageId; // variable para guardar el message_id del mensaje del menú de comandos
 let submenuMessageId; // variable para guardar el message_id del mensaje del submenú
+let menuOptionsMessage; // variable para guardar el message_id del mensaje del menu de opciones
 
 // Manejador de acción para el botón "Usuarios" del menú de comandos
 bot.action("usuarios", async (ctx) => {
@@ -114,12 +115,15 @@ bot.action("comandos_administradores", (ctx) => {
 });
 
 //Botón KYC Temporalmente, luego lo hare con Telegram Pasport
-bot.action("kyc", (ctx) => {
+bot.action("kyc", async (ctx) => {
+  // Borrado del menu
+  await ctx.deleteMessage(menuOptionsMessage);
   // Redireccionar a la URL de KYC
-  ctx.replyWithHTML(
+  const kycMessage = await ctx.replyWithHTML(
     `Para realizar KYC, da clic <a href="${urlKyc}">aquí</a>.`,
     { disable_web_page_preview: true }
   );
+  menuOptionsMessage = kycMessage.message_id;
 });
 
 //Botón Nuestra Web
@@ -321,7 +325,7 @@ bot.command("negocios", async (ctx) => {
 
     if (rows.length === 0) {
       // Si el usuario no tiene un registro en la tabla, mostrar un mensaje de acceso denegado
-      return ctx.replyWithMarkdown(`
+      return ctx.replyWithMarkdownV2(`
 🚨🚨🚨 **ATENCIÓN** 🚨🚨🚨
 Lo siento, tu cuenta no tiene permiso para acceder a esta sección. Para realizar transacciones en la sección de negocios, es necesario realizar un proceso de verificación de identidad conocido como KYC (*Know Your Customer*).
 Para más información sobre el proceso de KYC y cómo realizarlo, por favor ejecuta el comando /ayuda.
@@ -334,7 +338,7 @@ Gracias por tu comprensión.
 
     if (verificado) {
       // Si el usuario está verificado, mostrar un mensaje de bienvenida y el menú de opciones de negocios
-      return ctx.replyWithMarkdown(
+      return ctx.replyWithMarkdownV2(
         `
 🎉🎉🎉 ¡Felicidades! 🎉🎉🎉
 Tu cuenta ha sido verificada y tienes acceso a la sección de negocios. Por favor selecciona una opción:
@@ -343,7 +347,7 @@ Tu cuenta ha sido verificada y tienes acceso a la sección de negocios. Por favo
       );
     } else {
       // Si el usuario no está verificado, mostrar un mensaje de acceso denegado
-      return ctx.replyWithMarkdown(`
+      return ctx.replyWithMarkdownV2(`
 🚨🚨🚨 **ATENCIÓN** 🚨🚨🚨
 Lo siento, tu cuenta no tiene permiso para acceder a esta sección. Para realizar transacciones en la sección de negocios, es necesario realizar un proceso de verificación de identidad conocido como KYC (*Know Your Customer*).
 Por favor completa el proceso de verificación de identidad y espera a que tu cuenta sea aprobada. Para más información sobre el proceso de KYC y cómo realizarlo, por favor ejecuta el comando /ayuda.
@@ -353,7 +357,7 @@ Gracias por tu comprensión.
   } catch (err) {
     // Si ocurre un error al obtener la información del usuario, mostrar un mensaje de error
     console.error(err);
-    return ctx.replyWithMarkdown(`
+    return ctx.replyWithMarkdownV2(`
 🚫🚫🚫 **ATENCIÓN** 🚫🚫🚫
 Lo siento, ha ocurrido un error al comprobar tu estado de verificación. Por favor, intenta de nuevo más tarde. Si el problema persiste, por favor ejecuta el comando /ayuda.
     `);
@@ -373,7 +377,7 @@ bot.action("negocios", async (ctx) => {
 
     if (rows.length === 0) {
       // Si el usuario no tiene un registro en la tabla, mostrar un mensaje de acceso denegado
-      return ctx.replyWithMarkdown(`
+      return ctx.replyWithMarkdownV2(`
 🚨🚨🚨 **ATENCIÓN** 🚨🚨🚨
 Lo siento, tu cuenta no tiene permiso para acceder a esta sección. Para realizar transacciones en la sección de negocios, es necesario realizar un proceso de verificación de identidad conocido como KYC (*Know Your Customer*).
 Para más información sobre el proceso de KYC y cómo realizarlo, por favor ejecuta el comando /ayuda.
@@ -386,7 +390,7 @@ Gracias por tu comprensión.
 
     if (verificado) {
       // Si el usuario está verificado, mostrar un mensaje de bienvenida y el menú de opciones de negocios
-      return ctx.replyWithMarkdown(
+      return ctx.replyWithMarkdownV2(
         `
 🎉🎉🎉 ¡Felicidades! 🎉🎉🎉
 Tu cuenta ha sido verificada y tienes acceso a la sección de negocios. Por favor selecciona una opción:
@@ -395,7 +399,7 @@ Tu cuenta ha sido verificada y tienes acceso a la sección de negocios. Por favo
       );
     } else {
       // Si el usuario no está verificado, mostrar un mensaje de acceso denegado
-      return ctx.replyWithMarkdown(`
+      return ctx.replyWithMarkdownV2(`
 🚨🚨🚨 **ATENCIÓN** 🚨🚨🚨
 Lo siento, tu cuenta no tiene permiso para acceder a esta sección. Para realizar transacciones en la sección de negocios, es necesario realizar un proceso de verificación de identidad conocido como KYC (*Know Your Customer*).
 Por favor completa el proceso de verificación de identidad y espera a que tu cuenta sea aprobada. Para más información sobre el proceso de KYC y cómo realizarlo, por favor ejecuta el comando /ayuda.
@@ -405,7 +409,7 @@ Gracias por tu comprensión.
   } catch (err) {
     // Si ocurre un error al obtener la información del usuario, mostrar un mensaje de error
     console.error(err);
-    return ctx.replyWithMarkdown(`
+    return ctx.replyWithMarkdownV2(`
 🚫🚫🚫 **ATENCIÓN** 🚫🚫🚫
 Lo siento, ha ocurrido un error al comprobar tu estado de verificación. Por favor, intenta de nuevo más tarde. Si el problema persiste, por favor ejecuta el comando /ayuda.
     `);
