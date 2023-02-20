@@ -22,6 +22,10 @@ async function postularmeCommand(ctx) {
     console.log(err.stack);
     ctx.reply('Ha ocurrido un error al intentar postularse. Por favor inténtalo de nuevo más tarde.');
   }
+
+  // Mensaje adicional de ayuda
+  const message = 'Para volver al menu anterior ejecuta /votacion. ¿Necesitas ayuda? Prueba a usar el comando /ayuda para obtener más información.';
+  ctx.replyWithMarkdown(message);
 }
 
 module.exports = {

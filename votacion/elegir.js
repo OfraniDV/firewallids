@@ -1,4 +1,5 @@
 const { pool } = require('../psql/db');
+const { md, escapeMarkdown } = require('telegram-escape');
 
 // Comando para elegir candidatos
 async function elegirCommand(ctx) {
@@ -16,11 +17,14 @@ async function elegirCommand(ctx) {
     const encabezado = '¡Hora de elegir al Vice del CEO! 🗳️👨‍💼';
     const opciones = candidatos
       .filter((c) => c.vice_ceo === true)
-      .map((c, i) => `${i + 1}. ${c.nombre}`)
-      .join('\n');
-    const mensaje = `${encabezado}\n\nEstos son los candidatos:\n\n${opciones}\n\nElija el número correspondiente al candidato que prefiera:`;
+      .map((c, i) => {
+        const text = md`${i + 1}. ${escapeMarkdown(c.nombre)}`;
+        return { text, callback_data: c.id };
+      });
 
-    ctx.reply(mensaje);
+    const mensaje = `${encabezado}\n\nEstos son los candidatos:\n`;
+    ctx.reply(mensaje, { reply_markup: { inline_keyboard: [opciones] } });
+
   } catch (err) {
     console.error('Error al obtener candidatos:', err.message);
     ctx.reply('Ocurrió un error al obtener los candidatos');

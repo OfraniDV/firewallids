@@ -18,8 +18,8 @@ const createCandidatosTable = require('./votacion/candidatos');
 const { votacionCommand } = require('./votacion/votacion');
 const { cancelarCommand } = require('./votacion/votacion');
 const { elegirCommand } = require('./votacion/elegir');
+const { createElegidosTable } = require('./votacion/elegidos')
 
-createCandidatosTable();
 
 
 
@@ -31,6 +31,13 @@ const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
+
+
+
+// Funcion para crear la tabla Candidatos
+createCandidatosTable();
+
+
 
 
 const { md, escapeMarkdown } = require('telegram-escape')
