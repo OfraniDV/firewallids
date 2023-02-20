@@ -19,8 +19,9 @@ const { votacionCommand } = require('./votacion/votacion');
 const { cancelarCommand } = require('./votacion/votacion');
 const { elegirCommand } = require('./votacion/elegir');
 const elegir = require('./votacion/elegir');
-
-
+const { cleanCommand } = require('./votacion/clean');
+const { descandidatarseCommand } = require('./votacion/descandidatarse');
+const resultados = require('./votacion/resultados');
 
 
 
@@ -42,7 +43,12 @@ createCandidatosTable();
 
 const { md, escapeMarkdown } = require('telegram-escape')
 
+//Variables de Entorno *********
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const owner = process.env.ID_USER_OWNER;
+
+
+
 const urlKyc = process.env.URL_KYC;
 const urlWeb = process.env.URL_WEB;
 const gDenun = process.env.ID_GROUP_DENUNCIAS;
@@ -71,7 +77,7 @@ bot.start((ctx) => {
 bot.command('votaciontrue', iniciarVotacionCommand);
 // Comando Para Detener Votacion
 bot.command('votacionfalse', desactivarVotacion);
-// Comando Votacion
+// Comando Votacion solo al PV del Bot
 bot.command('votacion', votacionCommand);
 // Comando para Postularse
 bot.command('postularme', postularmeCommand);
@@ -79,6 +85,18 @@ bot.command('postularme', postularmeCommand);
 bot.command('cancelar', cancelarCommand);
 // Comando para elegir al Vice del Ceo
 bot.command('elegir', (ctx) => elegir.elegirCommand(ctx, bot));
+// Comando Poderoso solo se debe usar cuando termina la Votacion
+bot.command('cleanvotacion', (ctx) => {
+  if (ctx.from.id == owner) {
+    cleanCommand(ctx);
+  } else {
+    ctx.reply('Este comando solo puede ser utilizado por el propietario del bot.');
+  }
+});
+// Comando para descandidatarse
+bot.command('descandidatarme', descandidatarseCommand);
+// Comando para mostrar los resultados de la votación
+bot.command('resultados', resultados.resultadosCommand);
 
 
 
