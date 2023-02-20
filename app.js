@@ -18,7 +18,7 @@ const createCandidatosTable = require('./votacion/candidatos');
 const { votacionCommand } = require('./votacion/votacion');
 const { cancelarCommand } = require('./votacion/votacion');
 const { elegirCommand } = require('./votacion/elegir');
-
+const elegir = require('./votacion/elegir');
 
 
 
@@ -78,9 +78,7 @@ bot.command('postularme', postularmeCommand);
 // Comando para salir del menu de Votacion
 bot.command('cancelar', cancelarCommand);
 // Comando para elegir al Vice del Ceo
-bot.command('elegir', elegirCommand);
-
-
+bot.command('elegir', (ctx) => elegir.elegirCommand(ctx, bot));
 
 
 
