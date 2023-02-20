@@ -12,6 +12,65 @@ async function votacionesCommand(ctx) {
       if (votacionQuery.rows.length > 0) {
         ctx.reply('🗳️ Puedes participar en la votación.');
         // Aquí iría el código para mostrar el menú de votación
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
       } else {
         ctx.reply('🚨 Acceso denegado 🚨\n\nLo siento, el CEO aún no ha activado ninguna votación.');
       }
