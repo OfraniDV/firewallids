@@ -13,6 +13,10 @@ const cambUsuarios = require('./commands/cambios/cambusuarios');
 const cambNombres = require('./commands/cambios/cambnombres');
 const { iniciarVotacionCommand } = require('./votacion/votaciontrue');
 const { desactivarVotacion } = require('./votacion/votacionfalse');
+const { votacionesCommand } = require('./votacion/menuvotacion');
+
+
+
 
 
 //Sobre la DB
@@ -51,12 +55,18 @@ bot.start((ctx) => {
 });
 
 
-
+// Sistema de Votacion **************************************************
 // Comando Para Iniciar Votacion
 bot.command('votaciontrue', iniciarVotacionCommand);
 
 // Comando Para Detener Votacion
 bot.command('votacionfalse', desactivarVotacion);
+
+// Comando para los participantes llamado /votaciones
+bot.command('votaciones', votacionesCommand);
+
+
+
 
 
 
