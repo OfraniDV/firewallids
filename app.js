@@ -11,7 +11,8 @@ const { administradoresOptions } = require('./commands/comandos/admins');
 const { negociosOptions } = require('./commands/negocios/negocios');
 const cambUsuarios = require('./commands/cambios/cambusuarios');
 const cambNombres = require('./commands/cambios/cambnombres');
-
+const { iniciarVotacionCommand } = require('./votacion/votaciontrue');
+const { desactivarVotacion } = require('./votacion/votacionfalse');
 
 
 //Sobre la DB
@@ -51,15 +52,16 @@ bot.start((ctx) => {
 
 
 
+// Comando Para Iniciar Votacion
+bot.command('votaciontrue', iniciarVotacionCommand);
+
+// Comando Para Detener Votacion
+bot.command('votacionfalse', desactivarVotacion);
 
 
 
 
-
-
-
-
-//Menus y Comandos del Bot***************************************************
+//Menu Ayuda y Comandos del Bot***************************************************
 
 // Comando para mostrar el menú inline
 bot.command('ayuda', (ctx) => {
