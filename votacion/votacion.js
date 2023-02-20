@@ -7,7 +7,7 @@ async function votacionCommand(ctx) {
   const { rows } = await pool.query(query);
 
   if (rows.length > 0 && rows[0].activo) {
-    const message = '🗳️ ¡Bienvenido a las votaciones! 🗳️\n\n¿Qué desea hacer?\n1. Postularse: Ejecute /postularme\n2. Elegir: Ejecute /elegir\n3. Cancelar: /cancelar para salir en cualquier momento';
+    const message = '🗳️ ¡Bienvenido a las votaciones! 🗳️\n\n¿Qué desea hacer?\n1. Postularse: Ejecute /postularme\n2. Elegir: Ejecute /elegir\n3. No quiere ser mas Candidato: /descandidatarme\n4. Cancelar: /cancelar para salir en cualquier momento';
     ctx.replyWithMarkdown(message);
   } else {
     ctx.reply('Lo siento, las votaciones no están disponibles en este momento.');

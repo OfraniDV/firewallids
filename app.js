@@ -20,6 +20,7 @@ const { cancelarCommand } = require('./votacion/votacion');
 const { elegirCommand } = require('./votacion/elegir');
 const elegir = require('./votacion/elegir');
 const { cleanCommand } = require('./votacion/clean');
+const { descandidatarseCommand } = require('./votacion/descandidatarse');
 
 
 
@@ -92,7 +93,8 @@ bot.command('cleanvotacion', (ctx) => {
     ctx.reply('Este comando solo puede ser utilizado por el propietario del bot.');
   }
 });
-
+// Comando para descandidatarse
+bot.command('descandidatarme', descandidatarseCommand);
 
 
 
