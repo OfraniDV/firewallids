@@ -77,7 +77,7 @@ bot.start((ctx) => {
 bot.command('votaciontrue', iniciarVotacionCommand);
 // Comando Para Detener Votacion
 bot.command('votacionfalse', desactivarVotacion);
-// Comando Votacion
+// Comando Votacion solo al PV del Bot
 bot.command('votacion', votacionCommand);
 // Comando para Postularse
 bot.command('postularme', postularmeCommand);
