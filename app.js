@@ -22,7 +22,7 @@ const elegir = require('./votacion/elegir');
 const { cleanCommand } = require('./votacion/clean');
 const { descandidatarseCommand } = require('./votacion/descandidatarse');
 const resultados = require('./votacion/resultados');
-
+const admines = require('./votacion/admines');
 
 
 //Sobre la DB
@@ -97,6 +97,9 @@ bot.command('cleanvotacion', (ctx) => {
 bot.command('descandidatarme', descandidatarseCommand);
 // Comando para mostrar los resultados de la votación
 bot.command('resultados', resultados.resultadosCommand);
+// Metodo para Proponer un admin
+bot.command('proponer', admines.listarAdmines);
+
 
 
 
