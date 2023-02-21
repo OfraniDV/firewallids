@@ -12,5 +12,22 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.20"
-  }
+  },
+  "name": "firewallids",
+  "description": "FirewallIDs es un bot de Telegram que tiene como objetivo principal proteger a los grupos de Telegram contra la delincuencia cibernética. Además, también brinda una gestión segura para administrar los grupos y verificación de usuarios a través de KYC (Conozca a su Cliente).",
+  "version": "1.0.0",
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OfraniDV/firewallids.git"
+  },
+  "keywords": [
+    "firewallids"
+  ],
+  "author": "Ofrani Diaz Vizcay",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OfraniDV/firewallids/issues"
+  },
+  "homepage": "https://github.com/OfraniDV/firewallids#readme"
 }
