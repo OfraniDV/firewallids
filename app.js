@@ -73,21 +73,6 @@ const rules  = process.env.BOT_RULES;
 
 
 // Cuando el usuario ejecuta el comando /start en el chat privado del bot
-// crea la tabla logusuarios
-crearTablaLogUsuarios();
-
-// registra un evento onText para capturar los mensajes de texto del usuario
-bot.onText(/(.+)/, async (msg, match) => {
-  const usuario = msg.from;
-  
-  // inserta un registro en la tabla logusuarios
-  await insertarLogUsuario(usuario);
-  
-  // aquí va el código que responde al usuario
-  bot.sendMessage(chatId, 'Hola, gracias por enviar tu mensaje');
-});
-
-
 
 bot.start((ctx) => {
   // Obtener el ID y nombre del usuario
