@@ -11,19 +11,6 @@ const { administradoresOptions } = require('./commands/comandos/admins');
 const { negociosOptions } = require('./commands/negocios/negocios');
 const cambUsuarios = require('./commands/cambios/cambusuarios');
 const cambNombres = require('./commands/cambios/cambnombres');
-const { iniciarVotacionCommand } = require('./votacion/votaciontrue');
-const { desactivarVotacion } = require('./votacion/votacionfalse');
-const { postularmeCommand } = require('./votacion/postularme');
-const createCandidatosTable = require('./votacion/candidatos');
-const { votacionCommand } = require('./votacion/votacion');
-const { cancelarCommand } = require('./votacion/votacion');
-const { elegirCommand } = require('./votacion/elegir');
-const elegir = require('./votacion/elegir');
-const { cleanCommand } = require('./votacion/clean');
-const { descandidatarseCommand } = require('./votacion/descandidatarse');
-const resultados = require('./votacion/resultados');
-const { crearTablaLogUsuarios, insertarLogUsuario } = require('./psql/monitoreo/logusuarios');
-
 
 //Sobre la DB
 const { pool } = require('./psql/db');
@@ -34,19 +21,11 @@ const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
 
 
-
-// Funcion para crear la tabla Candidatos
-createCandidatosTable();
-
-
-
-
 const { md, escapeMarkdown } = require('telegram-escape')
 
 
 //Conexion del BOT
 const bot = new Telegraf(process.env.BOT_TOKEN);
-
 
 
 //Variables de Entorno *********
@@ -66,12 +45,6 @@ const rules  = process.env.BOT_RULES;
 
 
 
-
-
-
-
-
-
 // Cuando el usuario ejecuta el comando /start en el chat privado del bot
 
 bot.start((ctx) => {
@@ -82,39 +55,6 @@ bot.start((ctx) => {
  // Enviar mensaje de bienvenida
   ctx.reply(`👋 Hola ${nombre} 📩 !\n\n🆔 Este es tu ID en Telegram: ${id}\n\n🛡️ ¡Bienvenido a FirewallIds! Somos un servicio de seguridad en línea que se enfoca en la protección de tus datos personales y la prevención de actividades cibernéticas maliciosas.\n\n🤖 Puedo ayudarte si ejecutas el comando /ayuda.`);
 });
-
-
-// Sistema de Votacion **************************************************
-// Comando Para Iniciar Votacion
-bot.command('votaciontrue', iniciarVotacionCommand);
-// Comando Para Detener Votacion
-bot.command('votacionfalse', desactivarVotacion);
-// Comando Votacion solo al PV del Bot
-bot.command('votacion', votacionCommand);
-// Comando para Postularse
-bot.command('postularme', postularmeCommand);
-// Comando para salir del menu de Votacion
-bot.command('cancelar', cancelarCommand);
-// Comando para elegir al Vice del Ceo
-bot.command('elegir', (ctx) => elegir.elegirCommand(ctx, bot));
-// Comando Poderoso solo se debe usar cuando termina la Votacion
-bot.command('cleanvotacion', (ctx) => {
-  if (ctx.from.id == owner) {
-    cleanCommand(ctx);
-  } else {
-    ctx.reply('Este comando solo puede ser utilizado por el propietario del bot.');
-  }
-});
-// Comando para descandidatarse
-bot.command('descandidatarme', descandidatarseCommand);
-// Comando para mostrar los resultados de la votación
-bot.command('resultados', resultados.resultadosCommand);
-// Listar Admines
-bot.command('proponer', async (ctx) => {
-  const idsListanegra = await admines.obtenerIdsListanegra();
-  // Resto del código para listar los admines que no están en la lista negra
-});
-
 
 
 
