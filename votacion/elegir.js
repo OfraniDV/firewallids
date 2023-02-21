@@ -24,13 +24,30 @@ const elegir = {
       }
 
       // Encabezado y emojis
-      const encabezado = '¡Hora de elegir al Vice del CEO! 🗳️👨‍💼\n\nEstos son los candidatos:\n';
-      const opciones = candidatos.map((c) => {
-        const text = `👤 ${escapeMarkdown(c.nombre)}`;
-        return { text, callback_data: c.id };
-      });
+const encabezado = '¡Hora de elegir al Vice del CEO! 🗳️👨‍💼\n\nEstos son los candidatos:\n';
+const opciones = candidatos.map((c, i) => {
+  const text = `👤 ${escapeMarkdown(c.nombre)}`;
+  const newRow = i % 2 === 0 ? true : false;
+  return { text, callback_data: c.id, newRow };
+});
 
-      ctx.reply(encabezado, { reply_markup: { inline_keyboard: [opciones] } });
+const gruposBotones = [[]];
+let grupoActual = 0;
+
+opciones.forEach((opcion) => {
+  if (opcion.newRow) {
+    grupoActual++;
+    gruposBotones.push([]);
+  }
+
+  gruposBotones[grupoActual].push({ text: opcion.text, callback_data: opcion.callback_data });
+});
+
+const replyMarkup = {
+  inline_keyboard: gruposBotones,
+};
+
+ctx.reply(encabezado, { reply_markup: replyMarkup });
 
       // Escuchar por la elección del usuario
       const candidatoIds = candidatos.map((c) => c.id);
@@ -57,7 +74,8 @@ const elegir = {
         }
       });
     } catch (err) {
-      console.error('Error al procesar el comando:', err);
+      console.error
+('Error al procesar el comando:', err);
       await ctx.reply('Ha ocurrido un error al procesar su solicitud. Por favor inténtelo de nuevo.');
     }
   },
