@@ -5,6 +5,7 @@ async function createCandidatosTable() {
     const query = `CREATE TABLE IF NOT EXISTS candidatos (
       id BIGINT PRIMARY KEY,
       nombre TEXT,
+      idPosibleVC BIGINT,
       vice_ceo BOOLEAN DEFAULT false,
       fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`;
