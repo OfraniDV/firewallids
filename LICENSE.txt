@@ -1,0 +1,11 @@
+Licencia del Bot FirewallIds
+
+Este bot, denominado FirewallIds, es propiedad exclusiva de [Ofrani Diaz Vizcay]. Todos los derechos sobre su código fuente están reservados.
+
+Usted está autorizado a utilizar el bot FirewallIds con fines de seguridad informática en su empresa, organización o proyectos personales, pero no tiene derecho a copiar, modificar o distribuir el código fuente de este bot.
+
+La utilización del bot FirewallIds implica la aceptación de los términos de esta licencia. Si no está de acuerdo con ellos, no utilice este bot.
+
+Cualquier uso no autorizado o incumplimiento de esta licencia será perseguido en la medida de lo permitido por la ley.
+
+[Ofrani Diaz Vizcay]
