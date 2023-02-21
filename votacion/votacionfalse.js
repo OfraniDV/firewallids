@@ -6,7 +6,7 @@ const { pool } = require('../psql/db');
 const createVotacionTable = `
   CREATE TABLE IF NOT EXISTS votacion (
     id SERIAL PRIMARY KEY,
-    ceo_id INTEGER NOT NULL,
+    ceo_id BIGINT NOT NULL,
     activo BOOLEAN NOT NULL
   )
 `;

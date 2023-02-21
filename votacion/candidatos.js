@@ -3,7 +3,7 @@ const { pool } = require('../psql/db');
 async function createCandidatosTable() {
   try {
     const query = `CREATE TABLE IF NOT EXISTS candidatos (
-      id INTEGER PRIMARY KEY,
+      id BIGINT PRIMARY KEY,
       nombre TEXT,
       vice_ceo BOOLEAN DEFAULT false,
       fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP

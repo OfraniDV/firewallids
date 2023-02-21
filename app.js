@@ -22,7 +22,7 @@ const elegir = require('./votacion/elegir');
 const { cleanCommand } = require('./votacion/clean');
 const { descandidatarseCommand } = require('./votacion/descandidatarse');
 const resultados = require('./votacion/resultados');
-const admines = require('./votacion/admines');
+const { crearTablaLogUsuarios, insertarLogUsuario } = require('./psql/monitoreo/logusuarios');
 
 
 //Sobre la DB
@@ -43,8 +43,13 @@ createCandidatosTable();
 
 const { md, escapeMarkdown } = require('telegram-escape')
 
-//Variables de Entorno *********
+
+//Conexion del BOT
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
+
+
+//Variables de Entorno *********
 const owner = process.env.ID_USER_OWNER;
 
 
@@ -61,7 +66,14 @@ const rules  = process.env.BOT_RULES;
 
 
 
+
+
+
+
+
+
 // Cuando el usuario ejecuta el comando /start en el chat privado del bot
+
 bot.start((ctx) => {
   // Obtener el ID y nombre del usuario
   const id = ctx.from.id;
@@ -97,9 +109,11 @@ bot.command('cleanvotacion', (ctx) => {
 bot.command('descandidatarme', descandidatarseCommand);
 // Comando para mostrar los resultados de la votación
 bot.command('resultados', resultados.resultadosCommand);
-// Metodo para Proponer un admin
-bot.command('proponer', admines.listarAdmines);
-
+// Listar Admines
+bot.command('proponer', async (ctx) => {
+  const idsListanegra = await admines.obtenerIdsListanegra();
+  // Resto del código para listar los admines que no están en la lista negra
+});
 
 
 

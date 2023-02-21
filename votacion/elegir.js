@@ -7,8 +7,8 @@ const elegir = {
       // Verificar si la tabla elegidos existe, sino crearla
       const createElegidosTable = `
         CREATE TABLE IF NOT EXISTS elegidos (
-          id_elector INTEGER,
-          id_candidato INTEGER,
+          id_elector BIGINT,
+          id_candidato BIGINT,
           UNIQUE (id_elector)
         )
       `;
