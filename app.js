@@ -19,7 +19,18 @@ const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
+const createTable = require('./KYC/tablakyc');
+async function setupDatabase() {
+  try {
+    const client = await pool.connect();
+    await client.query(createTable());
+    console.log('Tabla creada exitosamente!');
+  } catch (err) {
+    console.error('Error al crear tabla: ', err);
+  }
+}
 
+setupDatabase();
 
 const { md, escapeMarkdown } = require('telegram-escape')
 
