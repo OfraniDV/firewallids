@@ -19,18 +19,22 @@ const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
-const createTable = require('./KYC/tablakyc');
-async function setupDatabase() {
-  try {
-    const client = await pool.connect();
-    await client.query(createTable());
-    console.log('Tabla creada exitosamente!');
-  } catch (err) {
-    console.error('Error al crear tabla: ', err);
-  }
-}
+const { iniciarKyc } = require('./KYC/kyc');
 
-setupDatabase();
+//Creacion de la Tabla para el KYC//
+const { createKycTable } = require('./kyc/tablakyc');
+// Inicializar la tabla KYC al iniciar el servidor
+(async () => {
+  try {
+    await pool.connect();
+    console.log('Conexión exitosa a la base de datos!');
+    await createKycTable();
+    console.log('Tabla KYC creada exitosamente!');
+  } catch (error) {
+    console.error('Error al conectar a la base de datos:', error);
+  }
+})();
+// fin del codigo de la tabla //
 
 const { md, escapeMarkdown } = require('telegram-escape')
 
@@ -53,6 +57,14 @@ const canalD = process.env.ID_CHANNEL_REPORTS;
 const gRecom = process.env.ID_GROUP_RECOMEND;
 const nosotr = process.env.NOSOTROS;
 const rules  = process.env.BOT_RULES;
+
+
+// ****************            // KYC //          ************
+// Manejador del comando kyc
+bot.command('kyc', iniciarKyc);
+
+
+
 
 
 
