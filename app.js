@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const { Telegraf, TelegramError } = require('telegraf');
-
+const { md, escapeMarkdown } = require('telegram-escape')
 
 // Importar comandos
 const { menuOptions } = require('./commands/menu');
@@ -19,9 +19,8 @@ const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
-const { iniciarKyc } = require('./KYC/kyc');
 
-//Creacion de la Tabla para el KYC//
+//Creacion de la Tabla para el KYC// Antes de Iniciar el KYC abajo de este codigo
 const { createKycTable } = require('./kyc/tablakyc');
 // Inicializar la tabla KYC al iniciar el servidor
 (async () => {
@@ -34,9 +33,12 @@ const { createKycTable } = require('./kyc/tablakyc');
     console.error('Error al conectar a la base de datos:', error);
   }
 })();
-// fin del codigo de la tabla //
+// fin del codigo de la tabla 
+// IMPORTACION DEL INICIO AL KYC 
+const { iniciarKyc } = require('./KYC/kyc');
 
-const { md, escapeMarkdown } = require('telegram-escape')
+
+
 
 
 //Conexion del BOT
@@ -61,7 +63,14 @@ const rules  = process.env.BOT_RULES;
 
 // ****************            // KYC //          ************
 // Manejador del comando kyc
-bot.command('kyc', iniciarKyc);
+bot.command('kyc', (ctx) => {
+  if (ctx.chat.type !== 'private') { // Verificar si el comando se está ejecutando en un chat privado
+    ctx.reply('🚫 Acceso denegado. Por favor, ejecuta este comando en el chat privado del bot.');
+  } else {
+    iniciarKyc(ctx); // Ejecutar la función de inicio de KYC
+  }
+});
+
 
 
 
