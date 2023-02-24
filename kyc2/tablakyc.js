@@ -1,4 +1,4 @@
-const { pool } = require('../psql/dblocal');
+const { pool } = require('../psql/db');
 
 // Función para crear la tabla KYC en la base de datos
 async function createKycTable() {
