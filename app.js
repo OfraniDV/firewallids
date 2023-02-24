@@ -36,13 +36,19 @@ const { createKycTable } = require('./kyc/tablakyc');
 // fin del codigo de la tabla 
 // IMPORTACION DEL INICIO AL KYC 
 const { iniciarKyc } = require('./KYC/kyc');
+// Menu del KYC 2 version
+const { mostrarMenu } = require('./kyc2/menukyc');
+const terminos = require('./kyc2/terminos');
+
+
 
 
 
 
 
 //Conexion del BOT
-const bot = new Telegraf(process.env.BOT_TOKEN);
+const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
+
 
 
 //Variables de Entorno *********
@@ -61,17 +67,45 @@ const nosotr = process.env.NOSOTROS;
 const rules  = process.env.BOT_RULES;
 
 
-// ****************            // KYC //          ************
+// ****************          ****  // KYC //  *****       ************
 // Manejador del comando kyc
-bot.command('kyc', (ctx) => {
+/*bot.command('kyc', (ctx) => {
   if (ctx.chat.type !== 'private') { // Verificar si el comando se está ejecutando en un chat privado
     ctx.reply('🚫 Acceso denegado. Por favor, ejecuta este comando en el chat privado del bot.');
   } else {
     iniciarKyc(ctx); // Ejecutar la función de inicio de KYC
   }
+});*/
+
+//Metodos de Menu Texto Plano
+bot.command('hacerkyc', (ctx) => {
+  // Verificar si el comando se está ejecutando en un chat privado
+  if (ctx.chat.type !== 'private') {
+    ctx.reply('🚫 Acceso denegado. Por favor, ejecuta este comando en el chat privado del bot.');
+  } else {
+    // Llamar la función de inicio de KYC
+    mostrarMenu(ctx);
+  }
+});
+//Iniciar el Proceso del KYC
+bot.on('callback_query', async (ctx) => {
+  if (ctx.callbackQuery.data === 'iniciarkyc') {
+    // Mostrar el submenú de términos y condiciones
+    terminos.mostrarTerminos(ctx);
+  }
 });
 
 
+
+//Cancelar el Proceso del KYC
+bot.on('callback_query', (ctx) => {
+  const data = ctx.update.callback_query.data;
+  
+  if (data === 'cancelar') {
+    ctx.reply('El proceso ha sido cancelado. Gracias por usar nuestro servicio.');
+    ctx.reply('¿Necesitas ayuda? Puedes escribir /ayuda en cualquier momento para obtener más información.');
+  }
+});
 
 
 
