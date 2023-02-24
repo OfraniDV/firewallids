@@ -27,23 +27,24 @@ async function createKycTable() {
         admin_id BIGINT
       );
     `);
-  } catch (err) {
-    console.error('Error creating KYC table:', err.message);
+    
   } finally {
     client.release();
   }
 }
 
-// Función para actualizar la información del KYC de un usuario
-async function updateKyc(user_id, column, value) {
-  const client = await pool.connect();
+async function insertKycData(userId, name) {
+  const query = {
+    text: 'INSERT INTO kycfirewallids (user_id, name) VALUES ($1, $2)',
+    values: [userId, name],
+  };
+
   try {
-    await client.query(`UPDATE kycfirewallids SET ${column} = $1 WHERE user_id = $2`, [value, user_id]);
+    await pool.query(query);
+    console.log('Datos KYC insertados correctamente!');
   } catch (err) {
-    console.error('Error actualizando la información del KYC:', err.message);
-  } finally {
-    client.release();
+    console.error('Error insertando datos KYC:', err.message);
   }
 }
 
-module.exports = { createKycTable, updateKyc };
+module.exports = { createKycTable, insertKycData };

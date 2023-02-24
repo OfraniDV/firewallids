@@ -1,9 +1,8 @@
-const { pool } = require('../psql/db');
-const { updateKycName } = require('../kyc2/tablakyc');
-
+const { insertKycData } = require('../kyc2/tablakyc');
 const { Markup } = require('telegraf');
+const bot = require('../bot');
 
-async function mostrarNombreCompleto(ctx, bot) {
+async function mostrarNombreCompleto(ctx) {
   const nombreUsuario = ctx.from.first_name;
   const pregunta = '¿Cuál es tu nombre completo?';
 
@@ -11,17 +10,17 @@ async function mostrarNombreCompleto(ctx, bot) {
 
   bot.on('text', async (ctx) => {
     const nombreCompleto = ctx.message.text;
-    const user_id = BigInt(ctx.from.id); // Convertir el id del usuario a un número entero de 64 bits
+    const user_id = ctx.from.id;
 
     try {
-      await pool.query('UPDATE kycfirewallids SET name = $1, user_id = $2 WHERE user_id = $2', [nombreCompleto, user_id]);
-      console.log('UPDATE realizado con éxito');
+      await insertKycData(user_id, nombreCompleto);
     } catch (err) {
-      console.error('Error actualizando nombre y user_id en la tabla:', err.message);
+      console.error('Error insertando nombre en la tabla:', err.message);
       console.log(err);
+      return ctx.reply('Ocurrió un error al guardar tu nombre completo. Por favor intenta de nuevo.');
     }
 
-    await ctx.telegram.sendMessage(ctx.from.id, '¡Gracias por proporcionar tu nombre completo!');
+    await ctx.reply('¡Gracias por proporcionar tu nombre completo!');
 
     // Aquí llamarías a la siguiente pregunta
   });
