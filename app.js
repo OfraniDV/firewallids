@@ -21,7 +21,7 @@ const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
 
 //Creacion de la Tabla para el KYC// Antes de Iniciar el KYC abajo de este codigo
-const { createKycTable } = require('./kyc/tablakyc');
+const { createKycTable } = require('./kyc2/tablakyc');
 // Inicializar la tabla KYC al iniciar el servidor
 (async () => {
   try {
@@ -45,6 +45,7 @@ const { createKycTable } = require('./kyc/tablakyc');
 // Menu del KYC 2 version
 const { mostrarMenu, despedida, iniciarProceso } = require('./kyc2/menukyc');
 const { mostrarTerminos, terminos } = require('./kyc2/terminos');
+const { mostrarNombreCompleto } = require('./kyc2/nombre');
 
 
 
@@ -116,9 +117,9 @@ bot.action('cancelarkyc', (ctx) => {
 bot.action('aceptoTerminos', (ctx) => {
   ctx.answerCbQuery();
   ctx.deleteMessage();
-  ctx.reply('Excelente, continuemos con el proceso del KYC.');
-  // Aquí puedes agregar el resto del código para manejar el proceso del KYC
+  mostrarNombreCompleto(ctx, bot);
 });
+
 // Manejador del evento callback_query para el botón "No Acepto"
 bot.action('noAceptoTerminos', (ctx) => {
   ctx.answerCbQuery();

@@ -10,6 +10,7 @@ function mostrarMenu(ctx) {
   menu += '🆔 Número de identidad\n';
   menu += '📱 Número de teléfono\n';
   menu += '📧 Correo electrónico "Email"\n';
+  menu += '🌐 Enlace de su cuenta en Redes Sociales "Facebook"\n';
   menu += '🏠 Dirección particular\n';
   menu += '🌆 Municipio\n';
   menu += '🌎 Provincia\n';
