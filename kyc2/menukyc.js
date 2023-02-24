@@ -5,23 +5,20 @@ function mostrarMenu(ctx) {
   const nombreUsuario = ctx.from.first_name;
 
   let menu = `👋 Bienvenid@ al Sistema del KYC para el Bot Firewallids, ${nombreUsuario}!\n\n`;
-  menu += 'Por favor responda las siguientes preguntas:\n\n';
-  menu += '1️⃣ Nombre completo\n';
-  menu += '2️⃣ Número de identidad\n';
-  menu += '3️⃣ Número de teléfono\n';
-  menu += '4️⃣ Correo electrónico "Email"\n';
-  menu += '5️⃣ Dirección particular\n';
-  menu += '6️⃣ Municipio\n';
-  menu += '7️⃣ Provincia\n';
-  menu += '8️⃣ Foto de CI (frente)\n';
-  menu += '9️⃣ Foto de CI (reverso)\n';
-  menu += '🔟 Selfie mostrando un papel blanco que tenga escrito "Acepto los Términos y Condiciones del uso del Bot Firewallids" con su firma y la fecha actual\n';
-  menu += '1️⃣1️⃣ Foto con un familiar mostrando su CI\n';
-  menu += '1️⃣2️⃣ Foto del Documento de propiedad de su línea telefónica de ETECSA\n';
-  menu += '1️⃣3️⃣ Foto de un Depósito en el banco que coincida con su nombre y apellidos\n\n';
-  menu += 'Antes de comenzar, por favor lea y acepte los siguientes Términos y Condiciones:\n';
+  menu += 'Estas son las preguntas que debera responder durante el Proceso del KYC:\n\n';
+  menu += '👤 Nombre completo\n';
+  menu += '🆔 Número de identidad\n';
+  menu += '📱 Número de teléfono\n';
+  menu += '📧 Correo electrónico "Email"\n';
+  menu += '🏠 Dirección particular\n';
+  menu += '🌆 Municipio\n';
+  menu += '🌎 Provincia\n';
+  menu += '🆔 Foto de CI (frente)\n';
+  menu += '🆔 Foto de CI (reverso)\n';
+  menu += '🤳 Selfie mostrando un papel blanco que tenga escrito "Acepto los Términos y Condiciones del uso del Bot Firewallids" con su firma y la fecha actual\n';
+  menu += '💰 Foto de un Depósito en el banco que coincida con su nombre y apellidos\n\n';
+  menu += 'Le recomiendo que tenga todo listo para iniciar el proceso:\n';
 
- 
   // Botones inline para iniciar o cancelar el proceso
   const options = {
     reply_markup: {
@@ -32,7 +29,7 @@ function mostrarMenu(ctx) {
             callback_data: 'iniciarkyc'
           },
           {
-            text: 'Cancelar Proceso ❌',
+            text: '❌ Cancelar Proceso',
             callback_data: 'cancelarkyc'
           }
         ]
