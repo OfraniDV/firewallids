@@ -1,34 +1,51 @@
 const { Markup } = require('telegraf');
 
+const terminos = `
+TÉRMINOS Y CONDICIONES DE USO DEL BOT FIREWALLIDS
+
+Por favor lea estos Términos y Condiciones de uso ("Términos", "Términos y Condiciones") detenidamente antes de utilizar el Bot Firewallids operado por Firewallids ("nosotros", "nos", o "nuestro").
+
+Su acceso y uso del Bot está condicionado a su aceptación y cumplimiento de estos Términos. Estos Términos se aplican a todos los visitantes, usuarios y otras personas que acceden o utilizan el Bot.
+
+Al acceder o utilizar el Bot, usted acepta estar obligado por estos Términos. Si no está de acuerdo con alguna parte de los términos, entonces no podrá acceder al Bot.
+
+Información personal
+Al utilizar el Bot, usted acepta la recopilación y uso de información de acuerdo con nuestra Política de Privacidad.
+
+Comunicaciones
+Al utilizar el Bot, usted acepta recibir comunicaciones de nuestra parte. Si desea darse de baja de nuestras comunicaciones, por favor contáctenos.
+
+Cambios
+Nos reservamos el derecho, a nuestra sola discreción, de modificar o reemplazar estos Términos en cualquier momento. Si una revisión es importante, intentaremos proporcionar un aviso de al menos 30 días antes de que entren en vigencia los nuevos términos. Lo que constituye un cambio importante se determinará a nuestra sola discreción.
+
+Al continuar accediendo o utilizando nuestro Bot después de que esas revisiones entren en vigencia, usted acepta estar sujeto a los términos revisados.
+
+Contacto
+Si tiene alguna pregunta sobre estos Términos, por favor contáctenos.
+`;
+
 function mostrarTerminos(ctx) {
-  const terminos = `Estos son los términos y condiciones del uso del Bot Firewallids:
+  const options = {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: 'Acepto',
+            callback_data: 'aceptoTerminos'
+          },
+          {
+            text: 'No Acepto',
+            callback_data: 'noAceptoTerminos'
+          }
+        ]
+      ]
+    }
+  };
 
-1. Firewallids se reserva el derecho de negar el servicio a cualquier persona por cualquier motivo en cualquier momento.
-
-2. Usted entiende que su contenido (sin incluir su información de tarjeta de crédito), puede ser transferido sin cifrar e involucrar (a) transmisiones a través de varias redes; y (b) cambios para ajustarse y adaptarse a los requisitos técnicos de conexión de redes o dispositivos. La información de la tarjeta de crédito está siempre cifrada durante la transferencia a través de las redes.
-
-3. Usted acepta no reproducir, duplicar, copiar, vender, revender o explotar ninguna parte del servicio, uso del servicio o acceso al servicio o cualquier contacto en el sitio web a través del cual se presta el servicio, sin el expreso permiso por escrito de Firewallids.
-
-4. Los títulos utilizados en este acuerdo se incluyen solo por conveniencia y no limitarán ni afectarán estos Términos.
-
-Al hacer clic en "✅ Acepto", acepta estos términos y condiciones.`;
-
-  ctx.reply('Para continuar, debe aceptar los términos y condiciones:', Markup.inlineKeyboard([
-    [
-      {
-        text: '✅ Acepto',
-        callback_data: 'aceptar'
-      },
-      {
-        text: '❌ No Acepto',
-        callback_data: 'noaceptar'
-      }
-    ]
-  ])).then(() => {
-    ctx.reply(terminos);
-  });
+  ctx.reply(terminos, options);
 }
 
 module.exports = {
+  terminos,
   mostrarTerminos
 };
