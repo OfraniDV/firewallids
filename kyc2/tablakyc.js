@@ -1,4 +1,4 @@
-const { pool } = require('../psql/db');
+const { pool } = require('../psql/dblocal');
 
 // Función para crear la tabla KYC en la base de datos
 async function createKycTable() {
@@ -19,6 +19,7 @@ async function createKycTable() {
         id_card_back TEXT,
         selfie_photo TEXT,
         deposit_photo TEXT,
+        facebook TEXT,
         terms_accepted BOOLEAN DEFAULT false,
         pending BOOLEAN DEFAULT true,
         approved BOOLEAN DEFAULT false,
@@ -33,4 +34,16 @@ async function createKycTable() {
   }
 }
 
-module.exports = { createKycTable };
+// Función para actualizar la información del KYC de un usuario
+async function updateKyc(user_id, column, value) {
+  const client = await pool.connect();
+  try {
+    await client.query(`UPDATE kycfirewallids SET ${column} = $1 WHERE user_id = $2`, [value, user_id]);
+  } catch (err) {
+    console.error('Error actualizando la información del KYC:', err.message);
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { createKycTable, updateKyc };
