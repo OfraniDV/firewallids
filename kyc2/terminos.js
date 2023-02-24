@@ -45,6 +45,7 @@ function mostrarTerminos(ctx) {
   ctx.reply(terminos, options);
 }
 
+
 module.exports = {
   terminos,
   mostrarTerminos

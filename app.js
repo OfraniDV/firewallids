@@ -36,11 +36,15 @@ const { createKycTable } = require('./kyc/tablakyc');
 // fin del codigo de la tabla 
 
 
+
+
+
+
 // IMPORTACION DEL INICIO AL KYC 
 //const { iniciarKyc } = require('./KYC/kyc');
 // Menu del KYC 2 version
 const { mostrarMenu, despedida, iniciarProceso } = require('./kyc2/menukyc');
-const terminos = require('./kyc2/terminos');
+const { mostrarTerminos, terminos } = require('./kyc2/terminos');
 
 
 
@@ -92,16 +96,37 @@ bot.command('hacerkyc', (ctx) => {
   }
 });
 
-// Manejador del evento callback_query para el botón "Iniciar Proceso"
-bot.action('iniciarkyc', iniciarProceso);
-// Cancelar el Proceso
-bot.action('cancelarkyc', despedida);
-// Manejador del evento callback_query para el botón "Acepto" en los términos y condiciones
-bot.action('aceptar', (ctx) => {
+//  BOTONES DE LOS MENUS DEL KYC
+// menu kyc
+// Botón iniciar proceso
+bot.action('iniciarkyc', (ctx) => {
   ctx.answerCbQuery();
   ctx.deleteMessage();
-  terminos.mostrarTerminos(ctx);
+  mostrarTerminos(ctx);
 });
+// Botón cancelar proceso
+bot.action('cancelarkyc', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.deleteMessage();
+  despedida(ctx);
+});
+
+// Menu Terminos
+// Manejador del evento callback_query para el botón "Acepto"
+bot.action('aceptoTerminos', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.deleteMessage();
+  ctx.reply('Excelente, continuemos con el proceso del KYC.');
+  // Aquí puedes agregar el resto del código para manejar el proceso del KYC
+});
+// Manejador del evento callback_query para el botón "No Acepto"
+bot.action('noAceptoTerminos', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.deleteMessage();
+  ctx.reply('Lo sentimos, solo podemos realizar el KYC a los usuarios que aceptan nuestras condiciones. Si necesita ayuda, escriba /ayuda.');
+});
+
+
 
 
 
