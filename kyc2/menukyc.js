@@ -47,10 +47,10 @@ function despedida(ctx) {
   ctx.reply('Gracias por utilizar el Sistema del KYC para el Bot Firewallids. Si necesita ayuda, escriba /ayuda.');
 }
 
-// Manejador del evento callback_query para el botón "Iniciar Proceso"
+/// Manejador del evento callback_query para el botón "Iniciar Proceso"
 function iniciarProceso(ctx) {
-  ctx.answerCbQuery();
-  mostrarTerminos(ctx);
+  ctx.deleteMessage(); // Eliminar el mensaje anterior
+  mostrarTerminos(ctx); // Mostrar los términos
 }
 
 module.exports = {

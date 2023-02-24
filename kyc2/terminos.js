@@ -30,11 +30,11 @@ function mostrarTerminos(ctx) {
       inline_keyboard: [
         [
           {
-            text: 'Acepto',
+            text: 'Acepto 🙋‍♀️',
             callback_data: 'aceptoTerminos'
           },
           {
-            text: 'No Acepto',
+            text: 'No Acepto 🙅‍♂️',
             callback_data: 'noAceptoTerminos'
           }
         ]
