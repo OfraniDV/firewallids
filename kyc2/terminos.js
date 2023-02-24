@@ -1,19 +1,34 @@
 const { Markup } = require('telegraf');
 
 function mostrarTerminos(ctx) {
-  let mensaje = `Antes de continuar, debe aceptar los siguientes términos y condiciones de uso:\n\n`;
-  mensaje += `Este bot ha sido creado por Firewallids con el fin de realizar el proceso de KYC a todos los usuarios que deseen utilizar nuestros servicios. Al utilizar este bot, acepta proporcionar información veraz y confiable, y garantiza que es el titular de la línea telefónica y que la información proporcionada pertenece a la persona que desea utilizar nuestros servicios.\n\n`;
-  mensaje += `Toda la información proporcionada será tratada con confidencialidad y solo se utilizará para los fines descritos. Firewallids se reserva el derecho de suspender el acceso a los servicios de aquellos usuarios que proporcionen información falsa o inexacta.\n\n`;
-  mensaje += `¿Acepta los términos y condiciones de uso?`;
+  const terminos = `Estos son los términos y condiciones del uso del Bot Firewallids:
 
-  const opciones = Markup.inlineKeyboard([
-    Markup.button.callback('✅ Aceptar', 'aceptar'),
-    Markup.button.callback('❌ Rechazar', 'rechazar'),
-  ]).extra();
+1. Firewallids se reserva el derecho de negar el servicio a cualquier persona por cualquier motivo en cualquier momento.
 
-  ctx.reply(mensaje, opciones);
+2. Usted entiende que su contenido (sin incluir su información de tarjeta de crédito), puede ser transferido sin cifrar e involucrar (a) transmisiones a través de varias redes; y (b) cambios para ajustarse y adaptarse a los requisitos técnicos de conexión de redes o dispositivos. La información de la tarjeta de crédito está siempre cifrada durante la transferencia a través de las redes.
+
+3. Usted acepta no reproducir, duplicar, copiar, vender, revender o explotar ninguna parte del servicio, uso del servicio o acceso al servicio o cualquier contacto en el sitio web a través del cual se presta el servicio, sin el expreso permiso por escrito de Firewallids.
+
+4. Los títulos utilizados en este acuerdo se incluyen solo por conveniencia y no limitarán ni afectarán estos Términos.
+
+Al hacer clic en "✅ Acepto", acepta estos términos y condiciones.`;
+
+  ctx.reply('Para continuar, debe aceptar los términos y condiciones:', Markup.inlineKeyboard([
+    [
+      {
+        text: '✅ Acepto',
+        callback_data: 'aceptar'
+      },
+      {
+        text: '❌ No Acepto',
+        callback_data: 'noaceptar'
+      }
+    ]
+  ])).then(() => {
+    ctx.reply(terminos);
+  });
 }
 
 module.exports = {
-  mostrarTerminos,
+  mostrarTerminos
 };

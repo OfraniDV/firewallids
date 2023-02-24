@@ -34,11 +34,15 @@ const { createKycTable } = require('./kyc/tablakyc');
   }
 })();
 // fin del codigo de la tabla 
+
+
 // IMPORTACION DEL INICIO AL KYC 
-const { iniciarKyc } = require('./KYC/kyc');
+//const { iniciarKyc } = require('./KYC/kyc');
 // Menu del KYC 2 version
-const { mostrarMenu } = require('./kyc2/menukyc');
+const { menukyc, iniciarProceso } = require('./kyc2/menukyc');
 const terminos = require('./kyc2/terminos');
+const { mostrarMenu } = require('./kyc2/menukyc');
+
 
 
 
@@ -87,25 +91,31 @@ bot.command('hacerkyc', (ctx) => {
     mostrarMenu(ctx);
   }
 });
-//Iniciar el Proceso del KYC
-bot.on('callback_query', async (ctx) => {
-  if (ctx.callbackQuery.data === 'iniciarkyc') {
-    // Mostrar el submenú de términos y condiciones
-    terminos.mostrarTerminos(ctx);
-  }
+
+// Manejador del evento callback_query para el botón "Iniciar Proceso"
+bot.action('iniciarkyc', iniciarProceso);
+
+// Manejador del evento callback_query para el botón "Acepto" en los términos y condiciones
+bot.action('aceptar', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.deleteMessage();
+  terminos.mostrarTerminos(ctx);
 });
 
-
-
-//Cancelar el Proceso del KYC
-bot.on('callback_query', (ctx) => {
-  const data = ctx.update.callback_query.data;
-  
-  if (data === 'cancelar') {
-    ctx.reply('El proceso ha sido cancelado. Gracias por usar nuestro servicio.');
-    ctx.reply('¿Necesitas ayuda? Puedes escribir /ayuda en cualquier momento para obtener más información.');
-  }
+// Manejador del evento callback_query para el botón "No Acepto" en los términos y condiciones
+bot.action('noaceptar', (ctx) => {
+  ctx.answerCbQuery('Debe aceptar los términos y condiciones para continuar');
 });
+
+// Evento de ayuda para el bot
+bot.help((ctx) => ctx.reply('Envíe /start para iniciar el proceso del KYC'));
+
+// Evento de error para el bot
+bot.catch((err, ctx) => {
+  console.log(`Ocurrió un error para el usuario ${ctx.update.message.from.username}:`, err);
+  ctx.reply('Lo siento, ha ocurrido un error');
+});
+
 
 
 
