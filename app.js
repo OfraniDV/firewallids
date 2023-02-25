@@ -44,6 +44,7 @@ const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/menukyc');
 const { mostrarTerminos, aceptoTerminos } = require('./KYC/terminos');
 const { mostrarInsertKYCMenu } = require('./KYC/insertKycmenu');
+const menuKYC = require('./KYC/menukyc');
 
 
 
