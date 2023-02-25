@@ -44,9 +44,9 @@ const { createKycTable } = require('./KYC/tablakyc');
 //const { iniciarKyc } = require('./KYC/kyc');
 // Menu del KYC 2 version
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/menukyc');
-const { mostrarTerminos, terminos } = require('./KYC/terminos');
-const { handleKycNombre } = require('./KYC/kycnombre');
-const { handleKycNumeroCi } = require('./KYC/numeroci');
+const { mostrarTerminos, aceptoTerminos } = require('./KYC/terminos');
+const { mostrarInsertKYCMenu } = require('./KYC/insertKycmenu');
+
 
 
 
@@ -112,18 +112,11 @@ bot.action('cancelarkyc', (ctx) => {
   ctx.deleteMessage();
   despedida(ctx);
 });
-
-// Si acepta los Terminos
+//Acepto los terminos
 bot.action('aceptoTerminos', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await ctx.deleteMessage();
-    await ctx.reply('Por favor, escribe tu nombre completo para continuar:');
-    bot.on('text', handleKycNombre);
-  } catch (err) {
-    console.error('Error al procesar la acción "aceptoTerminos":', err.message);
-    await ctx.reply('Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  }
+  await ctx.answerCbQuery();
+  await ctx.deleteMessage();
+  await mostrarInsertKYCMenu(ctx);
 });
 
 // Manejador del evento callback_query para el botón "No Acepto"
@@ -133,17 +126,11 @@ bot.action('noAceptoTerminos', (ctx) => {
   ctx.reply('Lo sentimos, solo podemos realizar el KYC a los usuarios que aceptan nuestras condiciones. Si necesita ayuda, escriba /ayuda.');
 });
 
-//Boton para recibir el Numero de Ci
-bot.action('NumeroCi', async (ctx) => {
-  try {
-    await ctx.answerCbQuery();
-    await ctx.deleteMessage();
-    await ctx.reply('Por favor, diga cual es su No. Carnet de Identidad:');
-    bot.on('text', handleKycNumeroCi );
-  } catch (err) {
-    console.error('Error al procesar la acción "aceptoTerminos":', err.message);
-    await ctx.reply('Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  }
+//Cancelar una vez dentro del menu del KYC
+bot.action('cancelKYC', async (ctx) => {
+  await ctx.answerCbQuery();
+  await ctx.deleteMessage(); // Eliminar mensaje anterior con opciones KYC
+  await ctx.reply('Proceso KYC cancelado.');
 });
 
 
