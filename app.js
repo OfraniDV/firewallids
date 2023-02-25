@@ -45,7 +45,8 @@ const { createKycTable } = require('./kyc2/tablakyc');
 // Menu del KYC 2 version
 const { mostrarMenu, despedida, iniciarProceso } = require('./kyc2/menukyc');
 const { mostrarTerminos, terminos } = require('./kyc2/terminos');
-const { mostrarNombreCompleto } = require('./kyc2/nombre');
+//const { mostrarNombreCompleto } = require('./kyc2/nombre');
+const { mostrarNombreCompleto } = require('./kyc2/comandokyc');
 
 
 
@@ -136,6 +137,7 @@ bot.command('nombre', (ctx) => {
   }
 });
 
+bot.command('kycnombre', mostrarNombreCompleto);
 
 
 

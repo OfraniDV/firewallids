@@ -1,5 +1,5 @@
-const { insertKycData } = require('../kyc2/tablakyc');
 const { Markup } = require('telegraf');
+const { insertKycData } = require('./tablakyc');
 const bot = require('../bot');
 
 async function mostrarNombreCompleto(ctx) {
@@ -10,10 +10,10 @@ async function mostrarNombreCompleto(ctx) {
 
   bot.hears(/.*/, async (ctx) => {
     const nombreCompleto = ctx.message.text;
-    const user_id = ctx.from.id;
+    const userId = ctx.from.id;
 
     try {
-      await insertKycData(user_id, nombreCompleto);
+      await insertKycData(userId, nombreCompleto);
     } catch (err) {
       console.error('Error insertando datos KYC en la tabla:', err.message);
     }

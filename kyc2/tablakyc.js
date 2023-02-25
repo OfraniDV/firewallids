@@ -1,6 +1,6 @@
 const { pool } = require('../psql/db');
 
-// Función para crear la tabla KYC en la base de datos
+// Creamos la tabla KYC si no existe
 async function createKycTable() {
   const client = await pool.connect();
   try {
@@ -27,16 +27,60 @@ async function createKycTable() {
         admin_id BIGINT
       );
     `);
-    
+    console.log('Tabla KYC creada exitosamente!');
+  } catch (err) {
+    console.error('Error creando tabla KYC:', err.message);
   } finally {
     client.release();
   }
 }
 
-async function insertKycData(userId, name) {
+// Insertamos datos en la tabla KYC
+async function insertKycData(data) {
+  const {
+    userId,
+    name,
+    identityNumber,
+    phoneNumber,
+    email,
+    address,
+    municipality,
+    province,
+    idCardFront,
+    idCardBack,
+    selfiePhoto,
+    depositPhoto,
+    facebook,
+    termsAccepted = false,
+    pending = true,
+    approved = false,
+    rejected = false,
+    adminId,
+  } = data;
+
   const query = {
-    text: 'INSERT INTO kycfirewallids (user_id, name) VALUES ($1, $2)',
-    values: [userId, name],
+    text: `INSERT INTO kycfirewallids (user_id, name, identity_number, phone_number, email, address, municipality, province, id_card_front, id_card_back, selfie_photo, deposit_photo, facebook, terms_accepted, pending, approved, rejected, admin_id) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+    values: [
+      userId,
+      name,
+      identityNumber,
+      phoneNumber,
+      email,
+      address,
+      municipality,
+      province,
+      idCardFront,
+      idCardBack,
+      selfiePhoto,
+      depositPhoto,
+      facebook,
+      termsAccepted,
+      pending,
+      approved,
+      rejected,
+      adminId,
+    ],
   };
 
   try {
@@ -47,4 +91,7 @@ async function insertKycData(userId, name) {
   }
 }
 
-module.exports = { createKycTable, insertKycData };
+module.exports = {
+  createKycTable,
+  insertKycData,
+};
