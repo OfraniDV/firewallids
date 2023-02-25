@@ -1,4 +1,4 @@
-const { pool } = require('../psql/dblocal');
+const { pool } = require('../psql/db');
 
 const terminos = `
 TÉRMINOS Y CONDICIONES DE USO DEL BOT FIREWALLIDS

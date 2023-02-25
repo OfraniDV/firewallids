@@ -8,16 +8,14 @@ async function mostrarNombreCompleto(ctx) {
 
   await ctx.reply(`Hola ${nombreUsuario}! ${pregunta}`, Markup.removeKeyboard());
 
-  bot.on('text', async (ctx) => {
+  bot.hears(/.*/, async (ctx) => {
     const nombreCompleto = ctx.message.text;
     const user_id = ctx.from.id;
 
     try {
       await insertKycData(user_id, nombreCompleto);
     } catch (err) {
-      console.error('Error insertando nombre en la tabla:', err.message);
-      console.log(err);
-      return ctx.reply('Ocurrió un error al guardar tu nombre completo. Por favor intenta de nuevo.');
+      console.error('Error insertando datos KYC en la tabla:', err.message);
     }
 
     await ctx.reply('¡Gracias por proporcionar tu nombre completo!');
