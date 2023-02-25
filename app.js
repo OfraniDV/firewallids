@@ -15,27 +15,25 @@ const cambNombres = require('./commands/cambios/cambnombres');
 //Sobre la DB
 const { pool } = require('./psql/db');
 
+// importar el módulo que contiene la función createKycTable
+const { createKycTable } = require('./KYC/tablakyc');
+
+// llamar a la función createKycTable para crear la tabla
+(async () => {
+  try {
+    await createKycTable();
+    console.log('Tabla KYC creada exitosamente!');
+  } catch (err) {
+    console.error('Error creando tabla KYC:', err.message);
+  }
+})();
+
+
+
 const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
-
-//Creacion de la Tabla para el KYC// Antes de Iniciar el KYC abajo de este codigo
-const { createKycTable } = require('./KYC/tablakyc');
-// Inicializar la tabla KYC al iniciar el servidor
-(async () => {
-  try {
-    await pool.connect();
-    console.log('Conexión exitosa a la base de datos!');
-    await createKycTable();
-    console.log('Tabla KYC creada exitosamente!');
-  } catch (error) {
-    console.error('Error al conectar a la base de datos:', error);
-  }
-})();
-// fin del codigo de la tabla 
-
-
 
 
 
@@ -86,6 +84,31 @@ const rules  = process.env.BOT_RULES;
     iniciarKyc(ctx); // Ejecutar la función de inicio de KYC
   }
 });*/
+
+//Botón KYC del Primer menu de COMANDOS PARA USUARIOS
+bot.action('kyc', async (ctx) => {
+  // Obtiene el ID del usuario
+  const userId = ctx.from.id;
+
+  // Consulta si el ID del usuario está en la tabla kycfirewallids
+  try {
+    const result = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [userId]);
+
+    if (result.rows.length === 0) {
+      // Si el usuario no está en la tabla, borra el mensaje actual y muestra el nuevo menú
+      await ctx.deleteMessage();
+      await menuKYC.mostrarMenu(ctx);
+    } else {
+      // Si el usuario ya está en la tabla, envía un mensaje indicando que ya completó el KYC
+      await ctx.answerCbQuery('Ya has completado el proceso KYC');
+    }
+  } catch (err) {
+    console.log(err);
+    await ctx.answerCbQuery('Ha ocurrido un error al procesar su solicitud');
+  }
+});
+
+
 
 //Metodos de Menu Texto Plano
 bot.command('hacerkyc', (ctx) => {
@@ -231,11 +254,6 @@ bot.action('comandos_administradores', (ctx) => {
 });
 
 
-//Botón KYC Temporalmente, luego lo hare con Telegram Pasport
-bot.action('kyc', (ctx) => {
-    // Redireccionar a la URL de KYC
-  ctx.replyWithHTML(`Para realizar KYC, da clic <a href="${urlKyc}">aquí</a>.`, { disable_web_page_preview: false });
-});
 
 
 //Botón Nuestra Web

@@ -17,7 +17,7 @@ async function createKycTable() {
     const query = `
       CREATE TABLE IF NOT EXISTS kycfirewallids (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users (id),
+        user_id INTEGER NOT NULL,
         name VARCHAR(100) NOT NULL,
         identity_number VARCHAR(20) NOT NULL,
         phone_number VARCHAR(20) NOT NULL,
@@ -34,7 +34,7 @@ async function createKycTable() {
         pending BOOLEAN NOT NULL,
         approved BOOLEAN NOT NULL,
         rejected BOOLEAN NOT NULL,
-        admin_id INTEGER REFERENCES admins (id),
+        admin_id INTEGER NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
@@ -105,6 +105,8 @@ async function insertKycData(userId, data) {
   if (facebook) {
     await insertFacebook(userId, facebook);
   }
+
+  // actualizar el resto de las columnas con una
 
   // actualizar el resto de las columnas con una única consulta
   const query = {
