@@ -1,4 +1,16 @@
 const { pool } = require('../psql/db');
+const { insertName } = require('./insertName');
+const { insertIdentityNumber } = require('./insertIdentityNumber');
+const { insertPhoneNumber } = require('./insertPhoneNumber');
+const { insertEmail } = require('./insertEmail');
+const { insertAddress } = require('./insertAddress');
+const { insertMunicipality } = require('./insertMunicipality');
+const { insertProvince } = require('./insertProvince');
+const { insertIdCardFront } = require('./insertIdCardFront');
+const { insertIdCardBack } = require('./insertIdCardBack');
+const { insertSelfiePhoto } = require('./insertSelfiePhoto');
+const { insertDepositPhoto } = require('./insertDepositPhoto');
+const { insertFacebook } = require('./insertFacebook');
 
 async function createKycTable() {
   try {
@@ -34,11 +46,6 @@ async function createKycTable() {
   }
 }
 
-const { insertName } = require('./insertName');
-const { insertIdentityNumber } = require('./insertIdentityNumber');
-const { insertPhoneNumber } = require('./insertPhoneNumber');
-// importar otras funciones aquí
-
 async function insertKycData(userId, data) {
   // desestructurar la data
   const {
@@ -71,7 +78,33 @@ async function insertKycData(userId, data) {
   if (phone_number) {
     await insertPhoneNumber(userId, phone_number);
   }
-  // llamar a otras funciones de inserción aquí
+  if (email) {
+    await insertEmail(userId, email);
+  }
+  if (address) {
+    await insertAddress(userId, address);
+  }
+  if (municipality) {
+    await insertMunicipality(userId, municipality);
+  }
+  if (province) {
+    await insertProvince(userId, province);
+  }
+  if (id_card_front) {
+    await insertIdCardFront(userId, id_card_front);
+  }
+  if (id_card_back) {
+    await insertIdCardBack(userId, id_card_back);
+  }
+  if (selfie_photo) {
+    await insertSelfiePhoto(userId, selfie_photo);
+  }
+  if (deposit_photo) {
+    await insertDepositPhoto(userId, deposit_photo);
+  }
+  if (facebook) {
+    await insertFacebook(userId, facebook);
+  }
 
   // actualizar el resto de las columnas con una única consulta
   const query = {
