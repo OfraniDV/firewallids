@@ -1,0 +1,4 @@
+2023-02-25T02:31:56.525Z - Error insertando datos KYC: Cannot destructure property 'name' of 'data' as it is undefined.
+2023-02-25T02:34:35.971Z - Error insertando datos KYC: Cannot destructure property 'name' of 'data' as it is undefined.
+2023-02-25T02:37:47.777Z - Error insertando datos KYC: Cannot destructure property 'name' of 'data' as it is undefined.
+2023-02-25T02:39:11.774Z - Error insertando datos KYC: Cannot destructure property 'name' of 'data' as it is undefined.

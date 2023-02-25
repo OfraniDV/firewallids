@@ -36,58 +36,58 @@ async function createKycTable() {
 }
 
 // Insertamos datos en la tabla KYC
-async function insertKycData(data) {
+async function insertKycData(userId, data) {
   const {
-    userId,
     name,
-    identityNumber,
-    phoneNumber,
+    identity_number,
+    phone_number,
     email,
     address,
     municipality,
     province,
-    idCardFront,
-    idCardBack,
-    selfiePhoto,
-    depositPhoto,
+    id_card_front,
+    id_card_back,
+    selfie_photo,
+    deposit_photo,
     facebook,
-    termsAccepted = false,
+    terms_accepted = false,
     pending = true,
     approved = false,
     rejected = false,
-    adminId,
+    admin_id,
   } = data;
 
   const query = {
     text: `INSERT INTO kycfirewallids (user_id, name, identity_number, phone_number, email, address, municipality, province, id_card_front, id_card_back, selfie_photo, deposit_photo, facebook, terms_accepted, pending, approved, rejected, admin_id) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+    ON CONFLICT (user_id) DO UPDATE SET name=$2, identity_number=$3, phone_number=$4, email=$5, address=$6, municipality=$7, province=$8, id_card_front=$9, id_card_back=$10, selfie_photo=$11, deposit_photo=$12, facebook=$13, terms_accepted=$14, pending=$15, approved=$16, rejected=$17, admin_id=$18`,
     values: [
       userId,
       name,
-      identityNumber,
-      phoneNumber,
+      identity_number,
+      phone_number,
       email,
       address,
       municipality,
       province,
-      idCardFront,
-      idCardBack,
-      selfiePhoto,
-      depositPhoto,
+      id_card_front,
+      id_card_back,
+      selfie_photo,
+      deposit_photo,
       facebook,
-      termsAccepted,
+      terms_accepted,
       pending,
       approved,
       rejected,
-      adminId,
+      admin_id,
     ],
   };
 
   try {
     await pool.query(query);
-    console.log('Datos KYC insertados correctamente!');
+    console.log('Datos KYC insertados o actualizados correctamente!');
   } catch (err) {
-    console.error('Error insertando datos KYC:', err.message);
+    console.error('Error insertando o actualizando datos KYC:', err.message);
   }
 }
 

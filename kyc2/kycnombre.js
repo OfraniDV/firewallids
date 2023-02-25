@@ -1,8 +1,8 @@
 const { insertKycData } = require('./tablakyc');
 
 async function handleKycNombre(ctx) {
-  const userId = ctx.from.id;
-  const name = ctx.message.text;
+  const userId = BigInt(ctx.from.id);
+  const name = ctx.message.text.replace('/kycnombre', '').trim();
 
   try {
     await insertKycData(userId, { name });

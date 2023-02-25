@@ -1,56 +1,24 @@
-const { pool } = require('./psql/db');
+const { insertKycData } = require('./tablakyc');
+const fs = require('fs');
 
-// Creamos la tabla KYC si no existe
-async function createKycTable() {
-  const client = await pool.connect();
-  try {
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS kycfirewallids (
-        id SERIAL PRIMARY KEY,
-        user_id BIGINT UNIQUE,
-        name TEXT,
-        identity_number TEXT,
-        phone_number TEXT,
-        email TEXT,
-        address TEXT,
-        municipality TEXT,
-        province TEXT,
-        id_card_front TEXT,
-        id_card_back TEXT,
-        selfie_photo TEXT,
-        deposit_photo TEXT,
-        facebook TEXT,
-        terms_accepted BOOLEAN DEFAULT false,
-        pending BOOLEAN DEFAULT true,
-        approved BOOLEAN DEFAULT false,
-        rejected BOOLEAN DEFAULT false,
-        admin_id BIGINT
-      );
-    `);
-    console.log('Tabla KYC creada exitosamente!');
-  } catch (err) {
-    console.error('Error creando tabla KYC:', err.message);
-  } finally {
-    client.release();
-  }
-}
-
-// Insertamos datos ficticios en la tabla KYC
-async function insertKycData() {
-  const query = {
-    text: 'INSERT INTO kycfirewallids (user_id, name) VALUES ($1, $2)',
-    values: [12345, 'Juan Perez'],
-  };
+async function handleKycNombre(ctx) {
+  const userId = BigInt(ctx.from.id);
+  const name = ctx.message.text.toString();
 
   try {
-    await pool.query(query);
-    console.log('Datos KYC insertados correctamente!');
+    await insertKycData(userId, { name });
+    await ctx.reply('¡Gracias por proporcionar tu nombre!');
   } catch (err) {
     console.error('Error insertando datos KYC:', err.message);
+    await ctx.reply('Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+
+    // Registra el error en un archivo de registro de errores
+    const errorMsg = `${new Date().toISOString()} - Error insertando datos KYC: ${err.message}\n`;
+    fs.appendFileSync('error.log', errorMsg);
   }
 }
 
-// Creamos la tabla KYC si no existe antes de insertar los datos ficticios
-createKycTable()
-  .then(() => insertKycData())
-  .catch((err) => console.error('Error en la promesa:', err));
+
+module.exports = {
+  handleKycNombre,
+};
