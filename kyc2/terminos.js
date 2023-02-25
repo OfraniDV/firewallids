@@ -1,4 +1,4 @@
-const { Markup } = require('telegraf');
+const { pool } = require('../psql/db');
 
 const terminos = `
 TÉRMINOS Y CONDICIONES DE USO DEL BOT FIREWALLIDS
@@ -24,7 +24,7 @@ Contacto
 Si tiene alguna pregunta sobre estos Términos, por favor contáctenos.
 `;
 
-function mostrarTerminos(ctx) {
+async function mostrarTerminos(ctx) {
   const options = {
     reply_markup: {
       inline_keyboard: [
@@ -45,8 +45,20 @@ function mostrarTerminos(ctx) {
   ctx.reply(terminos, options);
 }
 
+async function aceptoTerminos(ctx) {
+  const user_id = BigInt(ctx.from.id);
+
+  try {
+    await pool.query('UPDATE kycfirewallids SET terms_accepted = true WHERE user_id = $1', [user_id]);
+    await ctx.reply('Gracias por aceptar los términos y condiciones del bot Firewallids!');
+  } catch (err) {
+    console.error('Error actualizando términos en la tabla:', err.message);
+    await ctx.reply('Ha ocurrido un error al actualizar los términos y condiciones. Por favor, inténtelo de nuevo más tarde.');
+  }
+}
 
 module.exports = {
   terminos,
-  mostrarTerminos
+  mostrarTerminos,
+  aceptoTerminos
 };

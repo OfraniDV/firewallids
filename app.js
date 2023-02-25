@@ -127,6 +127,16 @@ bot.action('noAceptoTerminos', (ctx) => {
   ctx.reply('Lo sentimos, solo podemos realizar el KYC a los usuarios que aceptan nuestras condiciones. Si necesita ayuda, escriba /ayuda.');
 });
 
+//Solicitud de Nombre
+bot.command('nombre', (ctx) => {
+  if (ctx.session.terms_accepted) {
+    steps.mostrarNombreCompleto(ctx, bot);
+  } else {
+    ctx.reply('Lo siento, no puede usar este comando hasta que haya aceptado los términos y condiciones.');
+  }
+});
+
+
 
 
 
