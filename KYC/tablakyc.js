@@ -1,42 +1,46 @@
 const { pool } = require('../psql/db');
 
-// Creamos la tabla KYC si no existe
 async function createKycTable() {
-  const client = await pool.connect();
   try {
-    await client.query(`
+    const query = `
       CREATE TABLE IF NOT EXISTS kycfirewallids (
         id SERIAL PRIMARY KEY,
-        user_id BIGINT UNIQUE,
-        name TEXT,
-        identity_number TEXT,
-        phone_number TEXT,
-        email TEXT,
-        address TEXT,
-        municipality TEXT,
-        province TEXT,
-        id_card_front TEXT,
-        id_card_back TEXT,
-        selfie_photo TEXT,
-        deposit_photo TEXT,
-        facebook TEXT,
-        terms_accepted BOOLEAN DEFAULT false,
-        pending BOOLEAN DEFAULT true,
-        approved BOOLEAN DEFAULT false,
-        rejected BOOLEAN DEFAULT false,
-        admin_id BIGINT
-      );
-    `);
+        user_id INTEGER NOT NULL REFERENCES users (id),
+        name VARCHAR(100) NOT NULL,
+        identity_number VARCHAR(20) NOT NULL,
+        phone_number VARCHAR(20) NOT NULL,
+        email VARCHAR(100) NOT NULL,
+        address TEXT NOT NULL,
+        municipality VARCHAR(50) NOT NULL,
+        province VARCHAR(50) NOT NULL,
+        id_card_front TEXT NOT NULL,
+        id_card_back TEXT NOT NULL,
+        selfie_photo TEXT NOT NULL,
+        deposit_photo TEXT NOT NULL,
+        facebook TEXT NOT NULL,
+        terms_accepted BOOLEAN NOT NULL,
+        pending BOOLEAN NOT NULL,
+        approved BOOLEAN NOT NULL,
+        rejected BOOLEAN NOT NULL,
+        admin_id INTEGER REFERENCES admins (id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await pool.query(query);
     console.log('Tabla KYC creada exitosamente!');
   } catch (err) {
     console.error('Error creando tabla KYC:', err.message);
-  } finally {
-    client.release();
   }
 }
 
-// Insertamos datos en la tabla KYC
+const { insertName } = require('./insertName');
+const { insertIdentityNumber } = require('./insertIdentityNumber');
+const { insertPhoneNumber } = require('./insertPhoneNumber');
+// importar otras funciones aquí
+
 async function insertKycData(userId, data) {
+  // desestructurar la data
   const {
     name,
     identity_number,
@@ -57,15 +61,38 @@ async function insertKycData(userId, data) {
     admin_id,
   } = data;
 
+  // llamar a las funciones de inserción correspondientes
+  if (name) {
+    await insertName(userId, name);
+  }
+  if (identity_number) {
+    await insertIdentityNumber(userId, identity_number);
+  }
+  if (phone_number) {
+    await insertPhoneNumber(userId, phone_number);
+  }
+  // llamar a otras funciones de inserción aquí
+
+  // actualizar el resto de las columnas con una única consulta
   const query = {
-    text: `INSERT INTO kycfirewallids (user_id, name, identity_number, phone_number, email, address, municipality, province, id_card_front, id_card_back, selfie_photo, deposit_photo, facebook, terms_accepted, pending, approved, rejected, admin_id) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-    ON CONFLICT (user_id) DO UPDATE SET name=$2, identity_number=$3, phone_number=$4, email=$5, address=$6, municipality=$7, province=$8, id_card_front=$9, id_card_back=$10, selfie_photo=$11, deposit_photo=$12, facebook=$13, terms_accepted=$14, pending=$15, approved=$16, rejected=$17, admin_id=$18`,
+    text: `UPDATE kycfirewallids SET 
+      email=$2, 
+      address=$3, 
+      municipality=$4, 
+      province=$5, 
+      id_card_front=$6, 
+      id_card_back=$7, 
+      selfie_photo=$8, 
+      deposit_photo=$9, 
+      facebook=$10, 
+      terms_accepted=$11, 
+      pending=$12, 
+      approved=$13, 
+      rejected=$14, 
+      admin_id=$15
+      WHERE user_id=$1`,
     values: [
       userId,
-      name,
-      identity_number,
-      phone_number,
       email,
       address,
       municipality,
@@ -95,3 +122,4 @@ module.exports = {
   createKycTable,
   insertKycData,
 };
+``

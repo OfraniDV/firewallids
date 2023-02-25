@@ -46,6 +46,7 @@ const { createKycTable } = require('./KYC/tablakyc');
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/menukyc');
 const { mostrarTerminos, terminos } = require('./KYC/terminos');
 const { handleKycNombre } = require('./KYC/kycnombre');
+const { handleKycNumeroCi } = require('./KYC/numeroci');
 
 
 
@@ -132,16 +133,28 @@ bot.action('noAceptoTerminos', (ctx) => {
   ctx.reply('Lo sentimos, solo podemos realizar el KYC a los usuarios que aceptan nuestras condiciones. Si necesita ayuda, escriba /ayuda.');
 });
 
-//Solicitud de Nombre
-bot.command('nombre', (ctx) => {
-  if (ctx.session.terms_accepted) {
-    steps.mostrarNombreCompleto(ctx, bot);
-  } else {
-    ctx.reply('Lo siento, no puede usar este comando hasta que haya aceptado los términos y condiciones.');
+//Boton para recibir el Numero de Ci
+bot.action('NumeroCi', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await ctx.deleteMessage();
+    await ctx.reply('Por favor, diga cual es su No. Carnet de Identidad:');
+    bot.on('text', handleKycNumeroCi );
+  } catch (err) {
+    console.error('Error al procesar la acción "aceptoTerminos":', err.message);
+    await ctx.reply('Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
   }
 });
 
-bot.command('kycnombre', handleKycNombre);
+
+
+
+
+
+
+
+
+
 
 
 
