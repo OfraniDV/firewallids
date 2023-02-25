@@ -88,6 +88,13 @@ const rules  = process.env.BOT_RULES;
 
 //Botón KYC del Primer menu de COMANDOS PARA USUARIOS
 bot.action('kyc', async (ctx) => {
+  // Verifica si el botón se está ejecutando en el chat privado con el bot
+  if (ctx.chat.type !== 'private') {
+    // Si no es el chat privado con el bot, muestra un mensaje de acceso denegado
+    await ctx.answerCbQuery('🚫 Acceso denegado. Este botón solo está disponible en el chat privado con el bot');
+    return;
+  }
+
   // Obtiene el ID del usuario
   const userId = ctx.from.id;
 
@@ -106,19 +113,6 @@ bot.action('kyc', async (ctx) => {
   } catch (err) {
     console.log(err);
     await ctx.answerCbQuery('Ha ocurrido un error al procesar su solicitud');
-  }
-});
-
-
-
-//Metodos de Menu Texto Plano
-bot.command('hacerkyc', (ctx) => {
-  // Verificar si el comando se está ejecutando en un chat privado
-  if (ctx.chat.type !== 'private') {
-    ctx.reply('🚫 Acceso denegado. Por favor, ejecuta este comando en el chat privado del bot.');
-  } else {
-    // Llamar la función de inicio de KYC
-    mostrarMenu(ctx);
   }
 });
 
