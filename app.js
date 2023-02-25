@@ -21,7 +21,7 @@ const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
 
 //Creacion de la Tabla para el KYC// Antes de Iniciar el KYC abajo de este codigo
-const { createKycTable } = require('./kyc2/tablakyc');
+const { createKycTable } = require('./KYC/tablakyc');
 // Inicializar la tabla KYC al iniciar el servidor
 (async () => {
   try {
@@ -43,9 +43,9 @@ const { createKycTable } = require('./kyc2/tablakyc');
 // IMPORTACION DEL INICIO AL KYC 
 //const { iniciarKyc } = require('./KYC/kyc');
 // Menu del KYC 2 version
-const { mostrarMenu, despedida, iniciarProceso } = require('./kyc2/menukyc');
-const { mostrarTerminos, terminos } = require('./kyc2/terminos');
-const { handleKycNombre } = require('./kyc2/kycnombre');
+const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/menukyc');
+const { mostrarTerminos, terminos } = require('./KYC/terminos');
+const { handleKycNombre } = require('./KYC/kycnombre');
 
 
 
@@ -112,12 +112,17 @@ bot.action('cancelarkyc', (ctx) => {
   despedida(ctx);
 });
 
-// Menu Terminos
-// Manejador del evento callback_query para el botón "Acepto"
-bot.action('aceptoTerminos', (ctx) => {
-  ctx.answerCbQuery();
-  ctx.deleteMessage();
-  mostrarNombreCompleto(ctx, bot);
+// Si acepta los Terminos
+bot.action('aceptoTerminos', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await ctx.deleteMessage();
+    await ctx.reply('Por favor, escribe tu nombre completo para continuar:');
+    bot.on('text', handleKycNombre);
+  } catch (err) {
+    console.error('Error al procesar la acción "aceptoTerminos":', err.message);
+    await ctx.reply('Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  }
 });
 
 // Manejador del evento callback_query para el botón "No Acepto"

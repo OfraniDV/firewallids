@@ -6,7 +6,7 @@ async function handleKycNombre(ctx) {
 
   try {
     await insertKycData(userId, { name });
-    await ctx.reply('¡Gracias por proporcionar tu nombre!');
+    await ctx.reply(`¡Gracias por proporcionar tu nombre, ${name}! ¿Podrías proporcionar tu número de identidad?`);
   } catch (err) {
     console.error('Error insertando datos KYC:', err.message);
     await ctx.reply('Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
