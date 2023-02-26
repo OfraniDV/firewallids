@@ -152,38 +152,212 @@ bot.action('cancelKYC', async (ctx) => {
 
 //Acciones de los Botones de preguntas del KYC
 //                                                   Nombre Completo
-bot.action('insertName', (ctx) => {
-  const userId = BigInt(ctx.from.id);
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona tu nombre completo.');
 
-  const hearsHandler = async (ctx) => {
-    if (BigInt(ctx.from.id) !== userId) {
+bot.action('insertName', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona tu nombre completo en un mensaje privado.');
+
+  bot.on('message', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
       return;
     }
 
+    const userId = BigInt(ctx.from.id);
     const name = ctx.message.text;
+  
     try {
-      await insertKycData(userId, name);
+      await pool.query('INSERT INTO kycfirewallids (user_id, name) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET name = excluded.name', [userId, name]);
       await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu nombre!');
+      
     } catch (err) {
       console.error('Error insertando datos KYC:', err.message);
       await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
   
       // Registra el error en un archivo de registro de errores
       const errorMsg = `${new Date().toISOString()} - Error insertando datos KYC: ${err.message}\n`;
-      fs.appendFileSync('error.log', errorMsg);
+      console.error(errorMsg);
+      
     }
-
-    bot.off('text', hearsHandler);
-  };
-
-  bot.on('text', hearsHandler);
+  });
 });
 
 
-
 //                                           NUMERO DE IDENTIDAD
+
+bot.action('insertIdentityNumber', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona tu número de identidad en un mensaje privado.');
+
+  bot.on('message', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const identityNumber = ctx.message.text;
+  
+    try {
+      await pool.query('UPDATE kycfirewallids SET identity_number = $1 WHERE user_id = $2', [identityNumber, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu número de identidad!');
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+//                                         NUMERO DE TELEFONO
+
+bot.action('insertPhoneNumber', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona tu número de teléfono.');
+
+  bot.on('message', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const phoneNumber = ctx.message.text;
+  
+    try {
+      await pool.query('UPDATE kycfirewallids SET phone_number = $1 WHERE user_id = $2', [phoneNumber, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu número de teléfono!');
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+
+//                                      CORREO ELECTRONICO / EMAIL
+
+bot.action('insertEmail', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona tu correo electrónico.');
+
+  bot.on('message', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const email = ctx.message.text;
+  
+    try {
+      await pool.query('UPDATE kycfirewallids SET email = $1 WHERE user_id = $2', [email, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu correo electrónico!');
+      
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+//                                  DIRECCION PARTICULAR
+
+bot.action('insertAddress', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona tu dirección completa.');
+
+  bot.on('message', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const address = ctx.message.text;
+  
+    try {
+      await pool.query('UPDATE kycfirewallids SET address = $1 WHERE user_id = $2', [address, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu dirección!');
+      
+    } catch (err) {
+      console.error('Error actualizando dirección:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando dirección: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+//                                 MUNICIPIO
+
+bot.action('insertMunicipality', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona tu municipio de residencia.');
+
+  bot.on('message', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const municipality = ctx.message.text;
+  
+    try {
+      await pool.query('UPDATE kycfirewallids SET municipality = $1 WHERE user_id = $2', [municipality, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu municipio!');
+      
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+//                                    PROVINCIA
+
+bot.action('insertProvince', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona tu provincia.');
+
+  bot.on('message', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const province = ctx.message.text;
+  
+    try {
+      await pool.query('UPDATE kycfirewallids SET province = $1 WHERE user_id = $2', [province, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu provincia!');
+    } catch (err) {
+      console.error('Error actualizando provincia:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando provincia: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+//                                  FOTO DEL DOCUMENTO (FRONT)
+
+
+
 
 
 
