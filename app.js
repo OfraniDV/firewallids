@@ -1,6 +1,11 @@
 require('dotenv').config();
 
-const { Telegraf, TelegramError, Markup } = require('telegraf');
+const { Telegraf, TelegramError } = require('telegraf');
+const { Markup } = require('telegraf');
+// Esto es para poder recibir las imagenes
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
 const { md, escapeMarkdown } = require('telegram-escape')
 
@@ -34,19 +39,14 @@ const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
 const { kycMenu } = require('./KYC/kycmenu')
 const { mostrarTerminos, aceptoTerminos } = require ('./KYC/kycterminos')
 const { despedida } = require ('./KYC/kycpresentacion')
-const { insertKycData } = require ('./KYC/kyctabla')
+const { getUserResponses } = require('./KYC/kycrespuestas');
 
 
 
 
-
-//Conexion del BOT
+//Conexion del BOT Variables de Entorno
 const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
-
-
-
-
-//Variables de Entorno *********
+const ID_GROUP_VERIFY_KYC = process.env.ID_GROUP_VERIFY_KYC;
 const owner = process.env.ID_USER_OWNER;
 
 
@@ -356,8 +356,206 @@ bot.action('insertProvince', (ctx) => {
 
 //                                  FOTO DEL DOCUMENTO (FRONT)
 
+bot.action('insertIdCardFront', async (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, envía la foto de tu cédula de identidad (lado frontal).');
+
+  bot.on('photo', async (ctx) => {
+    if (ctx.message.chat.type !== 'private' || ctx.from.id !== ctx.message.from.id) {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+    const file = await ctx.telegram.getFile(fileId);
+    const downloadUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
+    const filePath = `./KYC/kycimg/id_card_front_${userId}.jpg`;
+
+    // Descargar la imagen y guardarla en el sistema de archivos local
+    const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+    fs.writeFileSync(filePath, response.data);
+
+    // Leer el archivo y convertirlo a un objeto Buffer
+    const buffer = fs.readFileSync(filePath);
+
+    // Actualizar la columna id_card_front con el objeto Buffer
+    try {
+      await pool.query('UPDATE kycfirewallids SET id_card_front = $1 WHERE user_id = $2', [buffer, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar la foto de tu cédula de identidad!');
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+//                                      FOTO DEL DOCUMENTO (BACK)
+
+bot.action('insertIdCardBack', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, envía la foto del reverso de tu cédula en un mensaje privado.');
+
+  bot.on('photo', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+
+    try {
+      const fileLink = await ctx.telegram.getFileLink(fileId);
+      const response = await axios.get(fileLink, { responseType: 'arraybuffer' });
+
+      await pool.query('UPDATE kycfirewallids SET id_card_back = $1 WHERE user_id = $2', [response.data, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por enviar la foto del reverso de tu cédula!');
+      
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
 
 
+//                                    SELFIE 
+
+bot.action('insertSelfiePhoto', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, envía una selfie: Sosteniendo un papel en blanco con la fecha actual escrito por usted y su firma y el nombre del Bot Firewallids, además sostén en frente del papel tu documento, debe aparecer tu rostro en la imagen clara y legible.');
+
+  bot.on('photo', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+
+    try {
+      const fileLink = await ctx.telegram.getFileLink(fileId);
+      const response = await axios.get(fileLink, { responseType: 'arraybuffer' });
+
+      await pool.query('UPDATE kycfirewallids SET selfie_photo = $1 WHERE user_id = $2', [response.data, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por enviar tu selfie!');
+      
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+
+//                       COMPROBANTE DEL BANCO 
+
+bot.action('insertDepositPhoto', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, envía la foto del comprobante de depósito en un mensaje privado.');
+
+  bot.on('photo', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+
+    try {
+      const fileLink = await ctx.telegram.getFileLink(fileId);
+      const response = await axios.get(fileLink, { responseType: 'arraybuffer' });
+
+      await pool.query('UPDATE kycfirewallids SET deposit_photo = $1 WHERE user_id = $2', [response.data, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por enviar la foto del comprobante de depósito!');
+      
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+
+
+
+//                              ENLACE DE SU CUENTA DE FACEBOOK
+
+bot.action('insertFacebook', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona el enlace de tu cuenta de Facebook.');
+
+  bot.on('message', async (ctx) => {
+    if (ctx.message.chat.type !== 'private') {
+      return;
+    }
+
+    const userId = BigInt(ctx.from.id);
+    const facebook = ctx.message.text;
+  
+    try {
+      await pool.query('UPDATE kycfirewallids SET facebook = $1 WHERE user_id = $2', [facebook, userId]);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar el enlace de tu cuenta de Facebook!');
+    } catch (err) {
+      console.error('Error actualizando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
+      console.error(errorMsg);
+    }
+  });
+});
+
+//                                  Enviar a Revisiones
+bot.command('reporte', async (ctx) => {
+  const userId = ctx.from.id;
+
+  try {
+    const responses = await getUserResponses(userId);
+    const reportMsg = `*Reporte KYC*\n\n` +
+      `Respuestas del usuario:\n\n` +
+      `${responses.map(response => `${response.question}: ${response.answer}`).join('\n')}\n`;
+
+    const buttons = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: 'Aceptar KYC 👍',
+              callback_data: 'aprobarkyc'
+            },
+            {
+              text: 'Rechazar KYC 👎',
+              callback_data: 'rechazarkyc'
+            }
+          ]
+        ]
+      }
+    };
+
+    await bot.telegram.sendMessage(ID_GROUP_VERIFY_KYC, reportMsg, { parse_mode: 'Markdown', ...buttons });
+
+  } catch (err) {
+    console.error(`Error generando el reporte KYC: ${err.message}`);
+    await ctx.reply('Lo siento, ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
+  }
+});
 
 
 

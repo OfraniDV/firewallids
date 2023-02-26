@@ -1,35 +1,47 @@
-const { pool } = require('../psql/db');
-const { Extra, Markup } = require('telegraf');
-require('dotenv').config();
+const { Telegraf, Markup } = require('telegraf');
+const { Pool } = require('pg');
+const { getUserResponses } = require('./kycrespuestas');
+const { generateReport } = require('./kycreporte');
 
-const enviarRevisiones = async (ctx) => {
-  const userId = ctx.from.id;
+const bot = new Telegraf(process.env.BOT_TOKEN);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
-  // Verificar si todos los campos están completos
-  const kycData = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [userId]);
-  const data = kycData.rows[0];
-  if (!data.name || !data.identity_number || !data.phone_number || !data.email || !data.address || !data.municipality || !data.province || !data.id_card_front || !data.id_card_back || !data.selfie_photo || !data.deposit_photo || !data.facebook) {
-    await ctx.reply('Por favor complete todos los campos antes de enviar a revisión.');
-    return;
+bot.action('enviarRevisiones', async (ctx) => {
+  const userId = BigInt(ctx.message.text.match(/ID de usuario: (\d+)/)[1]);
+
+  // Comprobar que todas las respuestas estén completas
+  const responses = await getUserResponses(userId);
+  let isComplete = true;
+  let incompleteQuestions = '';
+  for (const response of responses) {
+    if (!response.answer) {
+      isComplete = false;
+      incompleteQuestions += `*${response.question}*\n`;
+    }
   }
 
-  // Crear mensaje con los datos del usuario
-  let messageText = `Nuevos datos para KYC.\n\nNombre completo: ${data.name}\nNúmero de identidad: ${data.identity_number}\nNúmero de teléfono: ${data.phone_number}\nCorreo electrónico: ${data.email}\nDirección: ${data.address}\nMunicipio: ${data.municipality}\nProvincia: ${data.province}\nFoto de identificación (frente): ${data.id_card_front}\nFoto de identificación (atrás): ${data.id_card_back}\nSelfie: ${data.selfie_photo}\nComprobante de pago: ${data.deposit_photo}\nFacebook: ${data.facebook}`;
+  if (!isComplete) {
+    const message = `Lo siento, no se pueden enviar las revisiones ya que faltan las siguientes respuestas:\n\n${incompleteQuestions}`;
+    return ctx.replyWithMarkdown(message);
+  }
 
-  // Enviar mensaje al grupo de revisión
-  const chatId = process.env.ID_GROUP_VERIFY_KYC;
-  await ctx.telegram.sendMessage(chatId, messageText, Extra.HTML().markup((markup) => {
-    return markup.inlineKeyboard([
-      markup.callbackButton('Aceptar KYC', `approveKYC-${userId}`),
-      markup.callbackButton('Rechazar KYC', `rejectKYC-${userId}`)
-    ]);
-  }));
+  // Generar el reporte y enviarlo al grupo de verificación KYC
+  try {
+    await generateReport(ctx, userId);
+    const reportMessage = `El usuario de ID ${userId} ha enviado sus respuestas del KYC para revisión. Por favor, revisa el grupo de verificación KYC para procesar la solicitud.`;
+    await ctx.reply(reportMessage);
 
-  // Actualizar estado de KYC a "pendiente de revisión"
-  await pool.query('UPDATE kycfirewallids SET status = $1 WHERE user_id = $2', ['pendiente de revisión', userId]);
+    // Notificar al grupo de administradores
+    const adminMessage = `El usuario de ID ${userId} ha enviado sus respuestas del KYC para revisión. Por favor, revisa el grupo de verificación KYC para procesar la solicitud.\n\n`;
+    adminMessage += responses.map((response) => `*${response.question}:* ${response.answer}`).join('\n');
+    await bot.telegram.sendMessage(process.env.ID_GROUP_ADMINS, adminMessage, { parse_mode: 'Markdown' });
+  } catch (err) {
+    console.error(`Error generando el reporte KYC: ${err.message}`);
+    await ctx.reply('Lo siento, ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
+  }
+});
 
-  // Enviar mensaje de éxito al usuario
-  await ctx.reply('Sus datos han sido enviados a revisión. Gracias por utilizar nuestro servicio.');
-};
-
-module.exports = enviarRevisiones;
+module.exports = { generateReport, getUserResponses };
