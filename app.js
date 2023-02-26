@@ -153,13 +153,16 @@ bot.action('cancelKYC', async (ctx) => {
 //Acciones de los Botones de preguntas del KYC
 //                                                   Nombre Completo
 bot.action('insertName', (ctx) => {
+  const userId = BigInt(ctx.from.id);
   const chatId = ctx.chat.id;
   ctx.reply('Por favor, proporciona tu nombre completo.');
 
-  bot.hears(/\w.+/i, async (ctx) => {
-    const userId = BigInt(ctx.from.id);
+  const hearsHandler = async (ctx) => {
+    if (BigInt(ctx.from.id) !== userId) {
+      return;
+    }
+
     const name = ctx.message.text;
-  
     try {
       await insertKycData(userId, name);
       await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu nombre!');
@@ -171,8 +174,18 @@ bot.action('insertName', (ctx) => {
       const errorMsg = `${new Date().toISOString()} - Error insertando datos KYC: ${err.message}\n`;
       fs.appendFileSync('error.log', errorMsg);
     }
-  });
+
+    bot.off('text', hearsHandler);
+  };
+
+  bot.on('text', hearsHandler);
 });
+
+
+
+//                                           NUMERO DE IDENTIDAD
+
+
 
 
 

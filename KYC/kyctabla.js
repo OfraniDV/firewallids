@@ -35,7 +35,7 @@ async function createKycTable() {
 }
 
 async function insertKycData(userId, name, identityNumber, phoneNumber, email, address, municipality, province, idCardFront, idCardBack, selfiePhoto, depositPhoto, facebook, termsAccepted, pending, approved, rejected, adminId) {
-  const query = {
+  const { text, values } = {
     text: `
       INSERT INTO kycfirewallids (
         user_id,
@@ -80,12 +80,12 @@ async function insertKycData(userId, name, identityNumber, phoneNumber, email, a
     values: [
       userId,
       name,
-      identityNumber || null,
-      phoneNumber || null,
-      email || null,
-      address || null,
-      municipality || null,
-      province || null,
+      identityNumber,
+      phoneNumber,
+      email,
+      address,
+      municipality,
+      province,
       idCardFront || null,
       idCardBack || null,
       selfiePhoto || null,
@@ -100,7 +100,7 @@ async function insertKycData(userId, name, identityNumber, phoneNumber, email, a
   };
 
   try {
-    await pool.query(query);
+    await pool.query(text, values);
     console.log('Datos KYC insertados o actualizados correctamente!');
   } catch (err) {
     console.error('Error insertando o actualizando datos KYC:', err.message);
