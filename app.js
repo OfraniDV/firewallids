@@ -1,6 +1,7 @@
 require('dotenv').config();
 
-const { Telegraf, TelegramError } = require('telegraf');
+const { Telegraf, TelegramError, Markup } = require('telegraf');
+
 const { md, escapeMarkdown } = require('telegram-escape')
 
 // Importar comandos
@@ -14,42 +15,26 @@ const cambNombres = require('./commands/cambios/cambnombres');
 
 //Sobre la DB
 const { pool } = require('./psql/db');
+const pTimeout = require('p-timeout');
 
-// importar el módulo que contiene la función createKycTable
-const { createKycTable } = require('./KYC/tablakyc');
-
-// llamar a la función createKycTable para crear la tabla
-(async () => {
-  try {
-    await createKycTable();
-    console.log('Tabla KYC creada exitosamente!');
-  } catch (err) {
-    console.error('Error creando tabla KYC:', err.message);
-  }
-})();
+//Creando la tabla del KYC si no existe
+const { createKycTable } = require('./KYC/kyctabla');
 
 
-
+createKycTable()
+  
+//Esto de aqui es para hacer busquedas de cambios de alias y de nombre de un usuario
 const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
 
 
-
-
-// IMPORTACION DEL INICIO AL KYC 
-//const { iniciarKyc } = require('./KYC/kyc');
-// Menu del KYC 2 version
-const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/menukyc');
-const { mostrarTerminos, aceptoTerminos } = require('./KYC/terminos');
-const { mostrarInsertKYCMenu } = require('./KYC/insertKycmenu');
-const menuKYC = require('./KYC/menukyc');
-
-
-
-
-
+// IMPORTACION para el KYC 
+const { kycMenu } = require('./KYC/kycmenu')
+const { mostrarTerminos, aceptoTerminos } = require ('./KYC/kycterminos')
+const { despedida } = require ('./KYC/kycpresentacion')
+const { insertKycData } = require ('./KYC/kyctabla')
 
 
 
@@ -57,6 +42,7 @@ const menuKYC = require('./KYC/menukyc');
 
 //Conexion del BOT
 const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
+
 
 
 
@@ -78,13 +64,14 @@ const rules  = process.env.BOT_RULES;
 
 // ****************          ****  // KYC //  *****       ************
 // Manejador del comando kyc
-/*bot.command('kyc', (ctx) => {
-  if (ctx.chat.type !== 'private') { // Verificar si el comando se está ejecutando en un chat privado
+bot.command('kyc', (ctx) => {
+  if (ctx.chat.type !== 'private') {
     ctx.reply('🚫 Acceso denegado. Por favor, ejecuta este comando en el chat privado del bot.');
   } else {
-    iniciarKyc(ctx); // Ejecutar la función de inicio de KYC
+    ctx.reply('👤 Bienvenido al proceso de KYC. Por favor, selecciona la opción que deseas ingresar:', kycMenu);
   }
-});*/
+});
+  
 
 //Botón KYC del Primer menu de COMANDOS PARA USUARIOS
 bot.action('kyc', async (ctx) => {
@@ -146,7 +133,7 @@ bot.action('cancelarkyc', (ctx) => {
 bot.action('aceptoTerminos', async (ctx) => {
   await ctx.answerCbQuery();
   await ctx.deleteMessage();
-  await mostrarInsertKYCMenu(ctx);
+  await kycMenu(ctx);
 });
 
 // Manejador del evento callback_query para el botón "No Acepto"
@@ -162,6 +149,46 @@ bot.action('cancelKYC', async (ctx) => {
   await ctx.deleteMessage(); // Eliminar mensaje anterior con opciones KYC
   await ctx.reply('Proceso KYC cancelado.');
 });
+
+//Acciones de los Botones de preguntas del KYC
+//                                                   Nombre Completo
+bot.action('insertName', (ctx) => {
+  const chatId = ctx.chat.id;
+  ctx.reply('Por favor, proporciona tu nombre completo.');
+
+  bot.hears(/\w.+/i, async (ctx) => {
+    const userId = BigInt(ctx.from.id);
+    const name = ctx.message.text;
+  
+    try {
+      await insertKycData(userId, name);
+      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu nombre!');
+    } catch (err) {
+      console.error('Error insertando datos KYC:', err.message);
+      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
+  
+      // Registra el error en un archivo de registro de errores
+      const errorMsg = `${new Date().toISOString()} - Error insertando datos KYC: ${err.message}\n`;
+      fs.appendFileSync('error.log', errorMsg);
+    }
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

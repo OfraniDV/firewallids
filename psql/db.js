@@ -11,6 +11,14 @@ const pool = new Pool({
   }
 });
 
+pool.connect((err) => {
+  if (err) {
+    console.error('Error conectando a la base de datos:', err.stack);
+  } else {
+    console.log('Conexión exitosa con la base de datos');
+  }
+});
+
 module.exports = {
   pool
 };

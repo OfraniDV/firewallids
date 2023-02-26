@@ -1,5 +1,5 @@
 const { Markup } = require('telegraf');
-const { terminos, mostrarTerminos } = require('./terminos');
+const { terminos, mostrarTerminos } = require('./kycterminos');
 
 function mostrarMenu(ctx) {
   const nombreUsuario = ctx.from.first_name;
