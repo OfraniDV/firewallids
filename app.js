@@ -41,9 +41,9 @@ const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
 // IMPORTACION para el KYC 
 const { kycMenu } = require('./KYC/kycmenu')
 const { mostrarTerminos, aceptoTerminos } = require ('./KYC/kycterminos')
-const { despedida , mostrarMenu } = require ('./KYC/kycpresentacion')
 const { getUserResponses } = require('./KYC/kycrespuestas');
-const kycPresentacion = require('./KYC/kycpresentacion');
+const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacion');
+
 
 
 
@@ -109,7 +109,7 @@ bot.action('kyc', async (ctx) => {
 
     // Si el usuario no ha completado el KYC, borra el mensaje actual y muestra el menú KYC
     await ctx.deleteMessage();
-    await kycPresentacion.mostrarMenu(ctx);
+    await mostrarMenu(ctx);
 
   } catch (err) {
     console.log(err);
@@ -136,7 +136,7 @@ bot.action('cancelarkyc', (ctx) => {
 bot.action('aceptoTerminos', async (ctx) => {
   await ctx.answerCbQuery();
   await ctx.deleteMessage();
-  await kycMenu(ctx);
+  await ctx.reply('Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
 });
 
 // Manejador del evento callback_query para el botón "No Acepto"
@@ -559,17 +559,17 @@ bot.action('enviarRevisiones', async (ctx) => {
       fs.unlinkSync(photoFilename);
     }
 
-    // Mensaje para explicar cómo aprobar/rechazar KYC
+// Mensaje para explicar cómo aprobar/rechazar KYC
 const instructionsMsg = `🔍 *Nueva solicitud de verificación de KYC*\n\n` +
-`🆔 *ID de usuario:* ${userId}\n` +
-`🔹*Alias:* @${ctx.from.username}\n\n` +
-`👉 *Por favor, revisa la información del usuario y toma una decisión:* \n\n` +
-`✅ Si deseas *aprobar* la verificación, escribe:\n` +
-`/aprobarkyc ${userId}\n\n` +
-`❌ Si deseas *rechazar* la verificación, escribe:\n` +
-`/rechazarkyc ${userId}\n\n` +
-`Recuerda que *aprobar* un KYC es una tarea importante que requiere responsabilidad y atención, ya que un KYC aprobado implica que el usuario ha verificado su identidad, mientras que un KYC rechazado puede afectar la capacidad del usuario para utilizar nuestros servicios.\n\n` +
-`Gracias por tu colaboración.`;
+  `🆔 *ID de usuario:* ${userId}\n` +
+  `🔹*Alias:* @${ctx.from.username}\n\n` +
+  `👉 *Por favor, revisa la información del usuario y toma una decisión:* \n\n` +
+  `✅ Si deseas *aprobar* la verificación, escribe:\n` +
+  `/aprobarkyc ${userId}\n\n` +
+  `❌ Si deseas *rechazar* la verificación, escribe:\n` +
+  `/rechazarkyc ${userId}\n\n` +
+  `Recuerda que *aprobar* un KYC es una tarea importante que requiere responsabilidad y atención, ya que un KYC aprobado implica que el usuario ha verificado su identidad, mientras que un KYC rechazado puede afectar la capacidad del usuario para utilizar nuestros servicios.\n\n` +
+  `Gracias por tu colaboración.`;
 await bot.telegram.sendMessage(ID_GROUP_VERIFY_KYC, instructionsMsg, { parse_mode: 'Markdown' });
 
   } catch (err) {
