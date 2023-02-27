@@ -527,7 +527,6 @@ bot.action('insertFacebook', (ctx) => {
 
 
 //                                ***  Enviar a Revisiones ***
-
 bot.action('enviarRevisiones', async (ctx) => {
   const userId = ctx.from.id;
 
@@ -546,8 +545,8 @@ bot.action('enviarRevisiones', async (ctx) => {
         inline_keyboard: [
           [
             {
-              text: 'Aceptar KYC 👍',
-              callback_data: 'aprobarkyc'
+              text: `Aceptar KYC 👍 (${userId})`,
+              callback_data: `aprobarkyc:${userId}`
             },
             {
               text: 'Rechazar KYC 👎',
@@ -579,7 +578,47 @@ bot.action('enviarRevisiones', async (ctx) => {
   }
 });
 
+
 //  Botones para los Administradores Aprobar o Rechazar el KYC
+async function aprobarKYC(ctx) {
+  const kycId = ctx.callbackQuery.message.text.match(/\d+/g)[0];
+  console.log(`Valor de ctx.callbackQuery.data: ${ctx.callbackQuery.data}`); // Agregar esta línea
+  
+  const adminId = ctx.from.id;
+  
+  try {
+    // Buscar la solicitud de KYC por el ID
+    const kyc = await pool.query('SELECT * FROM kycfirewallids WHERE id = $1', [kycId]);
+    if (kyc.rowCount === 0) {
+      console.error(`No se pudo encontrar la solicitud de KYC con ID ${kycId}`);
+      return ctx.answerCbQuery('Ha ocurrido un error. Por favor, inténtalo de nuevo más tarde.', true);
+    }
+    
+    // Actualizar la fila correspondiente en la tabla kycfirewallids
+    const userId = Number(kyc.rows[0].user_id);
+    await pool.query('UPDATE kycfirewallids SET approved = true, admin_id = $1 WHERE user_id = $2', [ctx.update.callback_query.from.id, userId]);
+    
+    // Eliminar todos los mensajes enviados por el bot
+    const messagesToDelete = [ctx.callbackQuery.message.message_id];
+    messagesToDelete.push(kyc.rows[0].report_message_id);
+    messagesToDelete.push(kyc.rows[0].photos_message_id);
+    for (const fileId of kyc.rows[0].file_ids) {
+      messagesToDelete.push(await getFileMessageId(fileId));
+    }
+    await deleteMessages(ctx, messagesToDelete);
+    
+    // Notificar al usuario que su KYC ha sido aprobado
+    const user = await bot.telegram.getUser(userId);
+    await bot.telegram.sendMessage(userId, '🎉 Tu KYC ha sido aprobado. ¡Gracias por verificar tu identidad con FirewallIDs!');
+    await ctx.answerCbQuery(`KYC con ID ${kycId} aprobado exitosamente.`);
+  } catch (err) {
+    console.error(`Error aprobando KYC: ${err}`);
+    await ctx.answerCbQuery('Ha ocurrido un error. Por favor, inténtalo de nuevo más tarde.', true);
+  }
+}
+bot.action('aprobarkyc', aprobarKYC);
+
+
 
 
 
