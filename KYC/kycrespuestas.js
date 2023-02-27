@@ -29,16 +29,18 @@ async function getUserResponses(userId) {
     { column: 'deposit_photo', label: 'Foto del comprobante de depósito' }
   ];
 
+  const photoResponses = [];
+
   for (const { column, label } of photos) {
     const photoData = userKYCData[column];
     if (photoData) {
       const photoName = `${userKYCData.user_id}_${column}.jpg`;
       fs.writeFileSync(photoName, photoData);
-      responses.push({ question: label, answer: { photoName, photoData } });
+      photoResponses.push({ question: label, answer: { photoName, photoData } });
     }
   }
 
-  return responses;
+  return [...responses, ...photoResponses];
 }
 
 module.exports = { getUserResponses };
