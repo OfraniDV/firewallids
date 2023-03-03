@@ -11,11 +11,13 @@
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.41",
     "pg": "^8.9.0",
+    "request": "^2.88.2",
     "telegraf": "^4.11.2",
+    "telegraf-session-local": "^2.1.1",
     "telegram-escape": "^1.1.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.21"
   },
   "name": "firewallids",
   "description": "FirewallIDs es un bot de Telegram que tiene como objetivo principal proteger a los grupos de Telegram contra la delincuencia cibernética. Además, también brinda una gestión segura para administrar los grupos y verificación de usuarios a través de KYC (Conozca a su Cliente).",

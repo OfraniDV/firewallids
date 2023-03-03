@@ -10,6 +10,9 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
+
+
+
 const { md, escapeMarkdown } = require('telegram-escape')
 
 // Importar comandos
@@ -47,10 +50,12 @@ const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacio
 
 
 
+
 //Conexion del BOT Variables de Entorno
 const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 const ID_GROUP_VERIFY_KYC = process.env.ID_GROUP_VERIFY_KYC;
 const owner = process.env.ID_USER_OWNER;
+
 
 
 
@@ -132,12 +137,46 @@ bot.action('cancelarkyc', (ctx) => {
   ctx.deleteMessage();
   despedida(ctx);
 });
-//Acepto los terminos
+
+// Acción para aceptar los términos y condiciones
 bot.action('aceptoTerminos', async (ctx) => {
-  await ctx.answerCbQuery();
-  await ctx.deleteMessage();
-  await ctx.reply('Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
+  const userId = ctx.from.id;
+  console.log('User ID:', userId);
+
+  // Verificar si ya existe una fila correspondiente al usuario en la tabla
+  pool.query('SELECT * FROM kycfirewallids WHERE user_id::text = $1', [String(userId)], (err, result) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
+    }
+
+    console.log('User ID found:', result.rowCount === 1);
+
+    // Si no existe una fila correspondiente al usuario, crear una nueva fila
+    if (result.rowCount === 0) {
+      pool.query('INSERT INTO kycfirewallids (user_id, terms_accepted) VALUES ($1, true)', [BigInt(userId)], (err, result) => {
+        if (err) {
+          console.error(err);
+          return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
+        }
+
+        console.log('Result:', result);
+
+        if (result.rowCount === 1) {
+          ctx.answerCbQuery();
+          ctx.deleteMessage();
+          ctx.reply('¡Gracias por aceptar los términos y condiciones! Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
+        }
+      });
+    } else {
+      ctx.answerCbQuery();
+      ctx.deleteMessage();
+      ctx.reply('¡Ya has aceptado los términos y condiciones anteriormente! Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
+    }
+  });
 });
+
+
 
 // Manejador del evento callback_query para el botón "No Acepto"
 bot.action('noAceptoTerminos', (ctx) => {
@@ -153,377 +192,247 @@ bot.action('cancelKYC', async (ctx) => {
   await ctx.reply('Proceso KYC cancelado.');
 });
 
-//Acciones de los Botones de preguntas del KYC
-//                                                   Nombre Completo
 
+
+///////////////////////////////////////////////////////////////////////////////////
+//                          Acciones de los Botones de preguntas del KYC
+///////////////////////////////////////////////////////////////////////////////////
+
+//                                               Nombre Completo
 bot.action('insertName', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona tu nombre completo en un mensaje privado.');
+  const firstName = ctx.from.first_name;
+  ctx.reply(`📝¡${firstName}!, para cumplir con el proceso KYC, por favor proporciona tu nombre real como aparece en tu documento de identidad. Ejecuta el siguiente comando /nombre seguido de tu nombre completo.`);
+});
 
-  bot.on('message', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
+// Comando para guardar el nombre completo del usuario
+bot.command('nombre', (ctx) => {
+  const userId = ctx.from.id;
+  const name = ctx.message.text.substring(7).trim();
+
+  // Consultar si el usuario ya tiene un nombre registrado en la base de datos
+  pool.query('SELECT name FROM kycfirewallids WHERE user_id = $1', [userId], (err, result) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    const userId = BigInt(ctx.from.id);
-    const name = ctx.message.text;
-  
-    try {
-      await pool.query('INSERT INTO kycfirewallids (user_id, name) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET name = excluded.name', [userId, name]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu nombre!');
-      
-    } catch (err) {
-      console.error('Error insertando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error insertando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-      
+    // Si el usuario no tiene un nombre registrado, insertar el nuevo nombre en la base de datos
+    if (result.rows.length === 0) {
+      pool.query('INSERT INTO kycfirewallids (user_id, name) VALUES ($1, $2)', [userId, name], (err) => {
+        if (err) {
+          console.error(err);
+          return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
+        }
+
+        // Responder al usuario con un emoji y el mensaje de confirmación
+        ctx.reply('✅ Gracias, hemos guardado tu nombre. Ahora toca el próximo botón para continuar con el proceso de KYC.');
+      });
+    }
+
+    // Si el usuario ya tiene un nombre registrado, actualizar el nombre en la base de datos
+    else {
+      pool.query('UPDATE kycfirewallids SET name = $1 WHERE user_id = $2', [name, userId], (err) => {
+        if (err) {
+          console.error(err);
+          return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
+        }
+
+        // Responder al usuario con un emoji y el mensaje de confirmación
+        ctx.reply('✅ Gracias, hemos actualizado tu nombre. Ahora toca el próximo botón para continuar con el proceso de KYC.');
+      });
     }
   });
 });
 
 
-//                                           NUMERO DE IDENTIDAD
-
+//                          NUMERO DE IDENTIDAD
+// Acción para pedir el número de identidad del usuario
 bot.action('insertIdentityNumber', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona tu número de identidad en un mensaje privado.');
+  const firstName = ctx.from.first_name;
 
-  bot.on('message', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
+  ctx.reply(`🆔 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu número de identidad real. Ejecuta el siguiente comando /identidad seguido de tu número de identidad sin espacios ni guiones. Por ejemplo: /identidad ************.`);
+});
+
+//El Comando Identidad
+// Comando para guardar el número de identidad del usuario
+bot.command('identidad', (ctx) => {
+  const userId = ctx.from.id;
+  const identityNumber = ctx.message.text.substring(10).replace(/ /g, '');
+
+  // Actualizar el número de identidad del usuario en la base de datos
+  pool.query('UPDATE kycfirewallids SET identity_number = $1 WHERE user_id = $2', [identityNumber, userId], (err) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    const userId = BigInt(ctx.from.id);
-    const identityNumber = ctx.message.text;
-  
-    try {
-      await pool.query('UPDATE kycfirewallids SET identity_number = $1 WHERE user_id = $2', [identityNumber, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu número de identidad!');
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
+    // Responder al usuario con un emoji y el mensaje de confirmación
+    ctx.reply('👍 Gracias, hemos registrado tu número de identidad. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
 
-//                                         NUMERO DE TELEFONO
-
+//                    NUMERO DE TELEFONO
+// Acción para pedir el número de teléfono del usuario
 bot.action('insertPhoneNumber', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona tu número de teléfono.');
+  const firstName = ctx.from.first_name;
 
-  bot.on('message', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
+  ctx.reply(`📞 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu número de teléfono. Ejecuta el siguiente comando /telefono seguido de tu número de teléfono con el código de país sin espacios ni guiones. Por ejemplo: /telefono +1234567890.`);
+});
+//COMANDO DEL NUMERO DE TELEFONO
+// Comando para guardar el número de teléfono del usuario
+bot.command('telefono', (ctx) => {
+  const userId = ctx.from.id;
+  const phoneNumber = ctx.message.text.substring(9).replace(/ /g, '');
+
+  // Actualizar el número de teléfono del usuario en la base de datos
+  pool.query('UPDATE kycfirewallids SET phone_number = $1 WHERE user_id = $2', [phoneNumber, userId], (err) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    const userId = BigInt(ctx.from.id);
-    const phoneNumber = ctx.message.text;
-  
-    try {
-      await pool.query('UPDATE kycfirewallids SET phone_number = $1 WHERE user_id = $2', [phoneNumber, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu número de teléfono!');
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
+    // Responder al usuario con un emoji y el mensaje de confirmación
+    ctx.reply('👍 Gracias, hemos registrado tu número de teléfono. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
 
-
-//                                      CORREO ELECTRONICO / EMAIL
-
+//                                      CORREO ELECTRONICO
+// Acción para pedir la dirección de correo electrónico del usuario
 bot.action('insertEmail', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona tu correo electrónico.');
+  const firstName = ctx.from.first_name;
 
-  bot.on('message', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
+  ctx.reply(`📧 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu dirección de correo electrónico. Ejecuta el siguiente comando /correo seguido de tu dirección de correo electrónico. Por ejemplo: /correo ejemplo@ejemplo.com.`);
+});
+// comando del email
+// Comando para guardar la dirección de correo electrónico del usuario
+bot.command('correo', (ctx) => {
+  const userId = ctx.from.id;
+  const email = ctx.message.text.substring(8);
+
+  // Actualizar el correo electrónico del usuario en la base de datos
+  pool.query('UPDATE kycfirewallids SET email = $1 WHERE user_id = $2', [email, userId], (err) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    const userId = BigInt(ctx.from.id);
-    const email = ctx.message.text;
-  
-    try {
-      await pool.query('UPDATE kycfirewallids SET email = $1 WHERE user_id = $2', [email, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu correo electrónico!');
-      
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
+    // Responder al usuario con un emoji y el mensaje de confirmación
+    ctx.reply('👍 Gracias, hemos registrado tu dirección de correo electrónico. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
 
-//                                  DIRECCION PARTICULAR
-
+//                                                  DIRECCION PARTICULAR
+// Acción para pedir la dirección del usuario
 bot.action('insertAddress', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona tu dirección completa.');
+  const firstName = ctx.from.first_name;
 
-  bot.on('message', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
+  ctx.reply(`🏠 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu dirección. Ejecuta el siguiente comando /direccion seguido de tu dirección. Por ejemplo: /direccion Calle 123 # 45 - 67.`);
+});
+
+// Comando para guardar la dirección del usuario
+bot.command('direccion', (ctx) => {
+  const userId = ctx.from.id;
+  const address = ctx.message.text.substring(11);
+
+  // Actualizar la dirección del usuario en la base de datos
+  pool.query('UPDATE kycfirewallids SET address = $1 WHERE user_id = $2', [address, userId], (err) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    const userId = BigInt(ctx.from.id);
-    const address = ctx.message.text;
-  
-    try {
-      await pool.query('UPDATE kycfirewallids SET address = $1 WHERE user_id = $2', [address, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu dirección!');
-      
-    } catch (err) {
-      console.error('Error actualizando dirección:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando dirección: ${err.message}\n`;
-      console.error(errorMsg);
-    }
+    // Responder al usuario con un emoji y el mensaje de confirmación
+    ctx.reply('👍 Gracias, hemos registrado tu dirección. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
 
-//                                 MUNICIPIO
 
+//                                                  MUNICIPIO
+// Acción para pedir el municipio del usuario
 bot.action('insertMunicipality', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona tu municipio de residencia.');
+  const firstName = ctx.from.first_name;
 
-  bot.on('message', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
+  ctx.reply(`🏙️ ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu municipio. Ejecuta el siguiente comando /municipio seguido de tu municipio. Por ejemplo: /municipio Medellín.`);
+});
+// comando
+// Comando para guardar el municipio del usuario
+bot.command('municipio', (ctx) => {
+  const userId = ctx.from.id;
+  const municipality = ctx.message.text.substring(10);
+
+  // Actualizar el municipio del usuario en la base de datos
+  pool.query('UPDATE kycfirewallids SET municipality = $1 WHERE user_id = $2', [municipality, userId], (err) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    const userId = BigInt(ctx.from.id);
-    const municipality = ctx.message.text;
-  
-    try {
-      await pool.query('UPDATE kycfirewallids SET municipality = $1 WHERE user_id = $2', [municipality, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu municipio!');
-      
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
+    // Responder al usuario con un emoji y el mensaje de confirmación
+    ctx.reply('👍 Gracias, hemos registrado tu municipio. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
 
-//                                    PROVINCIA
 
+//                                                PROVINCIA 
+// Acción para pedir la provincia del usuario
 bot.action('insertProvince', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona tu provincia.');
+  const firstName = ctx.from.first_name;
 
-  bot.on('message', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
-    }
-
-    const userId = BigInt(ctx.from.id);
-    const province = ctx.message.text;
-  
-    try {
-      await pool.query('UPDATE kycfirewallids SET province = $1 WHERE user_id = $2', [province, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar tu provincia!');
-    } catch (err) {
-      console.error('Error actualizando provincia:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando provincia: ${err.message}\n`;
-      console.error(errorMsg);
-    }
-  });
+  ctx.reply(`🌅 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu provincia. Ejecuta el siguiente comando /provincia seguido de tu provincia. Por ejemplo: /provincia Antioquia.`);
 });
 
-//                                  FOTO DEL DOCUMENTO (FRONT)
+// Comando para guardar la provincia del usuario
+bot.command('provincia', (ctx) => {
+  const userId = ctx.from.id;
+  const province = ctx.message.text.substring(10);
 
-bot.action('insertIdCardFront', async (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, envía la foto de tu cédula de identidad (lado frontal).');
-
-  bot.on('photo', async (ctx) => {
-    if (ctx.message.chat.type !== 'private' || ctx.from.id !== ctx.message.from.id) {
-      return;
+  // Actualizar la provincia del usuario en la base de datos
+  pool.query('UPDATE kycfirewallids SET province = $1 WHERE user_id = $2', [province, userId], (err) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    const userId = BigInt(ctx.from.id);
-    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-    const file = await ctx.telegram.getFile(fileId);
-    const downloadUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
-    const filePath = `./KYC/kycimg/id_card_front_${userId}.jpg`;
-
-    // Descargar la imagen y guardarla en el sistema de archivos local
-    const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
-    fs.writeFileSync(filePath, response.data);
-
-    // Leer el archivo y convertirlo a un objeto Buffer
-    const buffer = fs.readFileSync(filePath);
-
-    // Actualizar la columna id_card_front con el objeto Buffer
-    try {
-      await pool.query('UPDATE kycfirewallids SET id_card_front = $1 WHERE user_id = $2', [buffer, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar la foto de tu cédula de identidad!');
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
-  });
-});
-
-//                                      FOTO DEL DOCUMENTO (BACK)
-
-bot.action('insertIdCardBack', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, envía la foto del reverso de tu cédula en un mensaje privado.');
-
-  bot.on('photo', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
-    }
-
-    const userId = BigInt(ctx.from.id);
-    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-
-    try {
-      const fileLink = await ctx.telegram.getFileLink(fileId);
-      const response = await axios.get(fileLink, { responseType: 'arraybuffer' });
-
-      await pool.query('UPDATE kycfirewallids SET id_card_back = $1 WHERE user_id = $2', [response.data, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por enviar la foto del reverso de tu cédula!');
-      
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
+    // Responder al usuario con un emoji y el mensaje de confirmación
+    ctx.reply('👍 Gracias, hemos registrado tu provincia. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
 
 
-//                                    SELFIE 
-
-bot.action('insertSelfiePhoto', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, envía una selfie: Sosteniendo un papel en blanco con la fecha actual escrito por usted y su firma y el nombre del Bot Firewallids, además sostén en frente del papel tu documento, debe aparecer tu rostro en la imagen clara y legible.');
-
-  bot.on('photo', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
-    }
-
-    const userId = BigInt(ctx.from.id);
-    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-
-    try {
-      const fileLink = await ctx.telegram.getFileLink(fileId);
-      const response = await axios.get(fileLink, { responseType: 'arraybuffer' });
-
-      await pool.query('UPDATE kycfirewallids SET selfie_photo = $1 WHERE user_id = $2', [response.data, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por enviar tu selfie!');
-      
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
-  });
-});
+//                                  FOTOS DEL KYC
 
 
-//                       COMPROBANTE DEL BANCO 
 
-bot.action('insertDepositPhoto', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, envía la foto del comprobante de depósito en un mensaje privado.');
-
-  bot.on('photo', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
-    }
-
-    const userId = BigInt(ctx.from.id);
-    const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-
-    try {
-      const fileLink = await ctx.telegram.getFileLink(fileId);
-      const response = await axios.get(fileLink, { responseType: 'arraybuffer' });
-
-      await pool.query('UPDATE kycfirewallids SET deposit_photo = $1 WHERE user_id = $2', [response.data, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por enviar la foto del comprobante de depósito!');
-      
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
-  });
-});
 
 
 
 
 //                              ENLACE DE SU CUENTA DE FACEBOOK
 
+// Acción para pedir la cuenta de Facebook del usuario
 bot.action('insertFacebook', (ctx) => {
-  const chatId = ctx.chat.id;
-  ctx.reply('Por favor, proporciona el enlace de tu cuenta de Facebook.');
+  const firstName = ctx.from.first_name;
 
-  bot.on('message', async (ctx) => {
-    if (ctx.message.chat.type !== 'private') {
-      return;
+  ctx.reply(`👤 ¡Hola ${firstName}! Para continuar con el proceso KYC, por favor proporciona tu cuenta de Facebook. Ejecuta el siguiente comando /facebook seguido de tu nombre de usuario. Por ejemplo: /facebook juan.perez`);
+});
+// comando
+// Comando para guardar la cuenta de Facebook del usuario
+bot.command('facebook', (ctx) => {
+  const userId = ctx.from.id;
+  const facebook = ctx.message.text.substring(9);
+
+  // Actualizar la cuenta de Facebook del usuario en la base de datos
+  pool.query('UPDATE kycfirewallids SET facebook = $1 WHERE user_id = $2', [facebook, userId], (err) => {
+    if (err) {
+      console.error(err);
+      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    const userId = BigInt(ctx.from.id);
-    const facebook = ctx.message.text;
-  
-    try {
-      await pool.query('UPDATE kycfirewallids SET facebook = $1 WHERE user_id = $2', [facebook, userId]);
-      await ctx.telegram.sendMessage(chatId, '¡Gracias por proporcionar el enlace de tu cuenta de Facebook!');
-    } catch (err) {
-      console.error('Error actualizando datos KYC:', err.message);
-      await ctx.telegram.sendMessage(chatId, 'Lo siento, ha habido un error al procesar tu solicitud. Por favor, intenta de nuevo más tarde.');
-  
-      // Registra el error en un archivo de registro de errores
-      const errorMsg = `${new Date().toISOString()} - Error actualizando datos KYC: ${err.message}\n`;
-      console.error(errorMsg);
-    }
+    // Responder al usuario con un emoji y el mensaje de confirmación
+    ctx.reply('👍 Gracias, hemos registrado tu cuenta de Facebook. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
+
 
 
 
