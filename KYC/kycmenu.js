@@ -14,17 +14,10 @@ const kycMenu = Markup.inlineKeyboard([
   ],
   [
     Markup.button.callback('🌍 Provincia', 'insertProvince'),
-    Markup.button.callback('📄 Identificación (Frente)', 'insertIdCardFront'),
+    Markup.button.callback('📄 Fotos del KYC', 'kycarchivos'),
   ],
   [
-    Markup.button.callback('📄 Identificación (Atrás)', 'insertIdCardBack'),
-    Markup.button.callback('🤳 Selfie', 'insertSelfiePhoto'),
-  ],
-  [
-    Markup.button.callback('💰 Comprobante de Pago', 'insertDepositPhoto'),
     Markup.button.callback('👤 Facebook', 'insertFacebook'),
-  ],
-  [
     Markup.button.callback('📤 Enviar a revisiones 🕵️‍♀️', 'enviarRevisiones'),
   ],
   [

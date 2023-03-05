@@ -401,6 +401,62 @@ bot.command('provincia', (ctx) => {
 
 //                                  FOTOS DEL KYC
 // Foto del Doc Id Front
+// Función que maneja el botón de acción "kycarchivos"
+bot.action('kycarchivos', (ctx) => {
+  const mensaje = `
+    Para cumplir con los requisitos de KYC, por favor comprima las siguientes fotos en un archivo ZIP o RAR y envíelas a través de este bot:
+
+    1. Documento frontal.
+    2. Documento reverso.
+    3. Selfie sosteniendo una hoja en blanco con su firma, la fecha actual, el nombre del bot y su documento frontal enfocado en frente del papel.
+    4. Foto de una transferencia o depósito en el banco donde se vea el número de la sucursal de su banco y aparezca su nombre igual que en su documento.
+
+    Asegúrese de que todas las fotos estén enfocadas y centradas correctamente antes de enviarlas. Cuando tenga todas las fotos listas, ejecute el comando /kycarchivos para enviar los archivos comprimidos.
+
+    Si tiene algún problema con la carga de archivos, contáctenos en nuestro soporte al cliente.
+
+    Gracias por su cooperación.`;
+  
+  // Enviar mensaje al usuario que ha tocado el botón de acción
+  ctx.telegram.sendMessage(ctx.from.id, mensaje);
+});
+//////                                                  COMANDO KYC ARCHIVOS
+bot.command('kycarchivos', async (ctx) => {
+  // Verificar que el usuario haya aceptado los términos
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [ctx.from.id]);
+  if (!user.rows[0] || !user.rows[0].terms_accepted) {
+    return ctx.reply('Debes aceptar los términos antes de enviar los archivos.');
+  }
+
+  // Pedir al usuario que envíe el archivo comprimido
+  await ctx.reply('Por favor, envía el archivo comprimido con tus documentos KYC.');
+
+  // Capturar el archivo enviado
+  bot.on('message', async (ctx) => {
+    if (ctx.message.document) {
+      const fileId = ctx.message.document.file_id;
+      const file = await bot.telegram.getFile(fileId);
+      const response = await axios.get(
+        `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`,
+        { responseType: 'arraybuffer' }
+      );
+
+      // Guardar el archivo en la base de datos
+      const userId = ctx.from.id;
+      const kycArchivo = response.data;
+      const query = 'UPDATE kycfirewallids SET kycarchivos=$1 WHERE user_id=$2 RETURNING *';
+      const values = [kycArchivo, userId];
+      try {
+        const result = await pool.query(query, values);
+        console.log(result.rows[0]);
+        ctx.reply('Archivo guardado exitosamente.');
+      } catch (error) {
+        console.error(error);
+        ctx.reply('Ocurrió un error al guardar el archivo.');
+      }
+    }
+  });
+});
 
 
 
@@ -442,48 +498,53 @@ bot.action('enviarRevisiones', async (ctx) => {
   const userId = ctx.from.id;
 
   try {
+    const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+    if (!user.rows[0] || !user.rows[0].terms_accepted) {
+      return ctx.reply('Debes aceptar los términos antes de enviar los archivos.');
+    }
+  
     const responses = await getUserResponses(userId);
     console.log('responses:', responses);
+    
     const reportMsg = `📝 *Solicitud de verificación de KYC*\n\n` +
       `Fecha: ${new Date().toLocaleString('es-CU', { timeZone: 'America/Havana' })}\n\n` +
       `El usuario de alias @${ctx.from.username} y ID ${userId} solicita que se revise su KYC:\n\n` +
       `${responses.map(response => `${response.question}: ${response.answer}`).join('\n')}\n\n`;
 
-    const photos = responses.filter(response => response.answer.photoData);
+    const kycArchivoData = responses.find(response => response.question === 'Archivo comprimido de documentos KYC')?.answer;
+    if (kycArchivoData) {
+      const kycFilename = `${userId}_kyc.rar`;
+      fs.writeFileSync(kycFilename, kycArchivoData);
+      const fileStream = fs.createReadStream(kycFilename);
 
-    await bot.telegram.sendMessage(ID_GROUP_VERIFY_KYC, reportMsg, { parse_mode: 'Markdown' });
-
-    for (const { question, answer } of photos) {
-      const photoStream = answer.photoData;
-      const photoFilename = answer.photoName;
-
-      await bot.telegram.sendPhoto(ID_GROUP_VERIFY_KYC, { source: photoStream }, { caption: `${question}:` });
+      await bot.telegram.sendDocument(ID_GROUP_VERIFY_KYC, { source: fileStream }, { caption: `Archivo comprimido de documentos KYC:` });
 
       // sleep to avoid exceeding the API rate limit
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Delete the photo file after sending it
-      fs.unlinkSync(photoFilename);
+      // Delete the kyc file after sending it
+      fs.unlinkSync(kycFilename);
     }
 
-// Mensaje para explicar cómo aprobar/rechazar KYC
-const instructionsMsg = `🔍 *Nueva solicitud de verificación de KYC*\n\n` +
-  `🆔 *ID de usuario:* ${userId}\n` +
-  `🔹*Alias:* @${ctx.from.username}\n\n` +
-  `👉 *Por favor, revisa la información del usuario y toma una decisión:* \n\n` +
-  `✅ Si deseas *aprobar* la verificación, escribe:\n` +
-  `/aprobarkyc ${userId}\n\n` +
-  `❌ Si deseas *rechazar* la verificación, escribe:\n` +
-  `/rechazarkyc ${userId}\n\n` +
-  `Recuerda que *aprobar* un KYC es una tarea importante que requiere responsabilidad y atención, ya que un KYC aprobado implica que el usuario ha verificado su identidad, mientras que un KYC rechazado puede afectar la capacidad del usuario para utilizar nuestros servicios.\n\n` +
-  `Gracias por tu colaboración.`;
-await bot.telegram.sendMessage(ID_GROUP_VERIFY_KYC, instructionsMsg, { parse_mode: 'Markdown' });
+    // Mensaje para explicar cómo aprobar/rechazar KYC
+    const instructionsMsg = `🔍 *Nueva solicitud de verificación de KYC*\n\n` +
+      `🆔 *ID de usuario:* ${userId}\n` +
+      `🔹*Alias:* @${ctx.from.username}\n\n` +
+      `👉 *Por favor, revisa la información del usuario y toma una decisión:* \n\n` +
+      `✅ Si deseas *aprobar* la verificación, escribe:\n` +
+      `/aprobarkyc ${userId}\n\n` +
+      `❌ Si deseas *rechazar* la verificación, escribe:\n` +
+      `/rechazarkyc ${userId}\n\n` +
+      `Recuerda que *aprobar* un KYC es una tarea importante que requiere responsabilidad y atención, ya que un KYC aprobado implica que el usuario ha verificado su identidad, mientras que un KYC rechazado puede afectar la capacidad del usuario para utilizar nuestros servicios.\n\n` +
+      `Gracias por tu colaboración.`;
+    await bot.telegram.sendMessage(ID_GROUP_VERIFY_KYC, instructionsMsg, { parse_mode: 'Markdown' });
 
   } catch (err) {
     console.error(`Error generando el reporte KYC: ${err.message}`);
     await ctx.reply('Lo siento, ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
   }
 });
+
 
 
 

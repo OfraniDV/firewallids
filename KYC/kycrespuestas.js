@@ -1,5 +1,5 @@
 const { pool } = require('../psql/db');
-const fs = require('fs');
+const path = require('path');
 
 async function getUserResponses(userId) {
   const query = 'SELECT * FROM kycfirewallids WHERE user_id = $1';
@@ -18,29 +18,11 @@ async function getUserResponses(userId) {
     { question: 'Dirección', answer: userKYCData.address },
     { question: 'Municipio', answer: userKYCData.municipality },
     { question: 'Provincia', answer: userKYCData.province },
-    { question: 'Facebook', answer: userKYCData.facebook }
+    { question: 'Facebook', answer: userKYCData.facebook },
+    { question: 'Archivo KYC', answer: path.parse(file.file_path).base }
   ];
 
-  // Convertir las fotos de bytea a archivos legibles por humanos
-  const photos = [
-    { column: 'id_card_front', label: 'Foto del frente de la cédula' },
-    { column: 'id_card_back', label: 'Foto del reverso de la cédula' },
-    { column: 'selfie_photo', label: 'Foto de la selfie con el papel en blanco' },
-    { column: 'deposit_photo', label: 'Foto del comprobante de depósito' }
-  ];
-
-  const photoResponses = [];
-
-  for (const { column, label } of photos) {
-    const photoData = userKYCData[column];
-    if (photoData) {
-      const photoName = `${userKYCData.user_id}_${column}.jpg`;
-      fs.writeFileSync(photoName, photoData);
-      photoResponses.push({ question: label, answer: { photoName, photoData } });
-    }
-  }
-
-  return [...responses, ...photoResponses];
+  return responses;
 }
 
 module.exports = { getUserResponses };
