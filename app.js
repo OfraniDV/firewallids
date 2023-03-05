@@ -493,57 +493,221 @@ bot.command('facebook', (ctx) => {
 
 
 //                                ***  Enviar a Revisiones ***
-
 bot.action('enviarRevisiones', async (ctx) => {
-  const userId = ctx.from.id;
-
   try {
-    const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
-    if (!user.rows[0] || !user.rows[0].terms_accepted) {
-      return ctx.reply('Debes aceptar los términos antes de enviar los archivos.');
-    }
-  
-    const responses = await getUserResponses(userId);
-    console.log('responses:', responses);
-    
-    const reportMsg = `📝 *Solicitud de verificación de KYC*\n\n` +
-      `Fecha: ${new Date().toLocaleString('es-CU', { timeZone: 'America/Havana' })}\n\n` +
-      `El usuario de alias @${ctx.from.username} y ID ${userId} solicita que se revise su KYC:\n\n` +
-      `${responses.map(response => `${response.question}: ${response.answer}`).join('\n')}\n\n`;
+    const userId = ctx.from.id;
+    const query = `
+      SELECT name, identity_number, phone_number, email, address, municipality, province, kycarchivos, facebook
+      FROM kycfirewallids
+      WHERE user_id = ${userId.toString()}
+    `;
+    const result = await pool.query(query);
+    const user = result.rows[0];
 
-    const kycArchivoData = responses.find(response => response.question === 'Archivo comprimido de documentos KYC')?.answer;
-    if (kycArchivoData) {
-      const kycFilename = `${userId}_kyc.rar`;
-      fs.writeFileSync(kycFilename, kycArchivoData);
-      const fileStream = fs.createReadStream(kycFilename);
-
-      await bot.telegram.sendDocument(ID_GROUP_VERIFY_KYC, { source: fileStream }, { caption: `Archivo comprimido de documentos KYC:` });
-
-      // sleep to avoid exceeding the API rate limit
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Delete the kyc file after sending it
-      fs.unlinkSync(kycFilename);
+    if (!user) {
+      ctx.reply(`Lo siento, no se encontró información de KYC para su usuario. Por favor, envíe su información de KYC a través del comando /kyc.`);
+      return;
     }
 
-    // Mensaje para explicar cómo aprobar/rechazar KYC
-    const instructionsMsg = `🔍 *Nueva solicitud de verificación de KYC*\n\n` +
-      `🆔 *ID de usuario:* ${userId}\n` +
-      `🔹*Alias:* @${ctx.from.username}\n\n` +
-      `👉 *Por favor, revisa la información del usuario y toma una decisión:* \n\n` +
-      `✅ Si deseas *aprobar* la verificación, escribe:\n` +
-      `/aprobarkyc ${userId}\n\n` +
-      `❌ Si deseas *rechazar* la verificación, escribe:\n` +
-      `/rechazarkyc ${userId}\n\n` +
-      `Recuerda que *aprobar* un KYC es una tarea importante que requiere responsabilidad y atención, ya que un KYC aprobado implica que el usuario ha verificado su identidad, mientras que un KYC rechazado puede afectar la capacidad del usuario para utilizar nuestros servicios.\n\n` +
-      `Gracias por tu colaboración.`;
-    await bot.telegram.sendMessage(ID_GROUP_VERIFY_KYC, instructionsMsg, { parse_mode: 'Markdown' });
+    // Comprobar si se han enviado todos los campos importantes
+    const name = user.name || 'Falta esta información';
+    const identity_number = user.identity_number || 'Falta esta información';
+    const phone_number = user.phone_number || 'Falta esta información';
+    const email = user.email || 'Falta esta información';
+    const address = user.address || 'Falta esta información';
+    const municipality = user.municipality || 'Falta esta información';
+    const province = user.province || 'Falta esta información';
+    const kycarchivos = user.kycarchivos;
+    const facebook = user.facebook || '';
 
-  } catch (err) {
-    console.error(`Error generando el reporte KYC: ${err.message}`);
-    await ctx.reply('Lo siento, ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
+    // Comprobar si falta alguna información importante
+    const hasAllInfo = name !== 'Falta esta información'
+      && identity_number !== 'Falta esta información'
+      && phone_number !== 'Falta esta información'
+      && email !== 'Falta esta información'
+      && address !== 'Falta esta información'
+      && municipality !== 'Falta esta información'
+      && province !== 'Falta esta información';
+
+    // Mostrar mensaje si falta alguna información importante
+    if (!hasAllInfo) {
+      let missingInfoMessage = 'Lo siento, falta la siguiente información en su KYC:\n\n';
+      if (name === 'Falta esta información') {
+        missingInfoMessage += '- Nombre\n';
+      }
+      if (identity_number === 'Falta esta información') {
+        missingInfoMessage += '- Número de identidad\n';
+      }
+      if (phone_number === 'Falta esta información') {
+        missingInfoMessage += '- Número de teléfono\n';
+      }
+      if (email === 'Falta esta información') {
+        missingInfoMessage += '- Correo electrónico\n';
+      }
+      if (address === 'Falta esta información') {
+        missingInfoMessage += '- Dirección\n';
+      }
+      if (municipality === 'Falta esta información') {
+        missingInfoMessage += '- Municipio\n';
+      }
+      if (province === 'Falta esta información') {
+        missingInfoMessage += '- Provincia\n';
+      }
+      ctx.reply(missingInfoMessage);
+      return;
+    }
+
+    // Convertir kycarchivos de bytea a archivo real legible para humanos
+const kycBuffer = Buffer.from(kycarchivos, 'binary');
+const kycFileName = `kyc-${userId}.zip`;
+fs.writeFileSync(kycFileName, kycBuffer);
+    // Crear un reporte con la información obtenida y enviarlo al usuario en su chat privado si se han enviado todos los campos, de lo contrario, mostrar un mensaje
+if (hasAllInfo) {
+  const reportMsg = `📝 *Solicitud de verificación de KYC*\n\n` +
+    `Fecha: ${new Date().toLocaleString('es-CU', { timeZone: 'America/Havana' })}\n\n` +
+    `El usuario de alias @${ctx.from.username} y ID ${ctx.from.id} solicita que se revise su KYC:\n\n` +
+    `Nombre: ${name}\n` +
+    `Número de identidad: ${identity_number}\n` +
+    `Número de teléfono: ${phone_number}\n` +
+    `Correo electrónico: ${email}\n` +
+    `Dirección: ${address}\n` +
+    `Municipio: ${municipality}\n` +
+    `Provincia: ${province}\n` +
+    `Facebook: ${facebook}\n`;
+
+  const reportMsgSent = await ctx.telegram.sendMessage(ctx.from.id, `¿La siguiente información es correcta?\n\n${reportMsg}`, {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: 'Sí, todo correcto',
+            callback_data: 'kyc_approval'
+          },
+          {
+            text: 'No, necesito editar',
+            callback_data: 'kyc_edit'
+          }
+        ]
+      ]
+    }
+  });
+
+  // Enviar el archivo KYC comprimido junto con un mensaje
+  const kycFileSent = await ctx.telegram.sendDocument(ctx.from.id, { source: kycFileName }, { caption: 'Aquí está su KYC.' });
+
+  // Eliminar los archivos generados del disco
+  fs.unlinkSync(kycFileName);
+} else {
+  ctx.reply('Para enviar su informe al departamento del KYC, debe completar todos los campos de información solicitados. Por favor, revise y complete la información que falta.');
+}
+} catch (error) {
+  console.error(error);
+  ctx.reply(`Lo siento, ha ocurrido un error al obtener la información de KYC.`);
+  }
+  })
+
+
+// Si todo esta bien se envia al grupo de revisiones
+
+
+bot.action('kyc_approval', async (ctx) => {
+  try {
+    const userId = ctx.from.id;
+    const query = `
+      SELECT name, identity_number, phone_number, email, address, municipality, province, kycarchivos, facebook, pending
+      FROM kycfirewallids
+      WHERE user_id = ${userId.toString()}
+    `;
+    const result = await pool.query(query);
+    const user = result.rows[0];
+
+    if (!user) {
+      ctx.reply(`Lo siento, no se encontró información de KYC para su usuario. Por favor, envíe su información de KYC a través del comando /kyc.`);
+      return;
+    }
+
+    const pending = user.pending;
+
+    if (pending) {
+      ctx.reply("Ya se ha enviado su solicitud al departamento de revisiones. Por favor, espere a que su solicitud sea revisada. Si tiene alguna pregunta, por favor, póngase en contacto con el grupo de soporte técnico.");
+      return;
+    }
+
+    // Convertir kycarchivos de bytea a archivo real legible para humanos
+    const kycBuffer = Buffer.from(user.kycarchivos, 'binary');
+    const kycFileName = `kyc-${userId}.zip`;
+    fs.writeFileSync(kycFileName, kycBuffer);
+
+    // Crear un reporte con la información obtenida y enviarlo al grupo de administradores
+    const reportMsg = `ATENCIÓN\n\nEn la fecha ${new Date().toLocaleString('es-CU', { timeZone: 'America/Havana' })}, el usuario de alias @${ctx.from.username} y ID ${ctx.from.id} está solicitando que se revise su KYC:\n\n` +
+      `Nombre: ${user.name}\n` +
+      `Número de identidad: ${user.identity_number}\n` +
+      `Número de teléfono: ${user.phone_number}\n` +
+      `Correo electrónico: ${user.email}\n` +
+      `Dirección: ${user.address}\n` +
+      `Municipio: ${user.municipality}\n` +
+      `Provincia: ${user.province}\n` +
+      `Facebook: ${user.facebook}\n\n` +
+      `Para aprobar este KYC, ejecute el comando /aprobarkyc <ID_USUARIO>. Para rechazarlo, use el comando /rechazarkyc <ID_USUARIO>.`;
+
+
+
+    const kycFileSent = await ctx.telegram.sendDocument(process.env.ID_GROUP_VERIFY_KYC, { source: kycFileName }, { caption: reportMsg });
+
+    // Eliminar los archivos generados del disco
+    fs.unlinkSync(kycFileName);
+
+    // Actualizar la columna "pending" a "true" en la tabla "kycfirewallids"
+    const updateQuery = `
+      UPDATE kycfirewallids
+      SET pending = true
+      WHERE user_id = ${userId}
+    `;
+    await pool.query(updateQuery);
+
+    ctx.reply("¡Su solicitud de verificación de KYC ha sido enviada al departamento de revisiones para su revisión! Por favor, espere a que su solicitud sea revisada. Si tiene alguna pregunta, por favor, póngase en contacto con el grupo de soporte técnico.");
+  } catch (error) {
+    console.error(error);
+    ctx.reply(`Lo siento, ha ocurrido un error al enviar su solicitud de verificación de KYC. Por favor, inténtelo de nuevo más tarde o póngase en contacto con el grupo de soporte técnico.`);
   }
 });
+
+
+
+
+
+// Si falta algo
+bot.action('kyc_edit', async (ctx) => {
+  try {
+    const userId = ctx.from.id;
+    const query = `
+      SELECT pending
+      FROM kycfirewallids
+      WHERE user_id = ${userId}
+    `;
+    const result = await pool.query(query);
+    const pending = result.rows[0].pending;
+
+    if (pending) {
+      // Actualizar la columna "pending" a "null" en la tabla "kycfirewallids"
+      const updateQuery = `
+        UPDATE kycfirewallids
+        SET pending = null
+        WHERE user_id = ${userId}
+      `;
+      await pool.query(updateQuery);
+
+      ctx.reply("¡Listo! Puedes enviar tus informaciones nuevamente.");
+    } else {
+      ctx.reply("Para editar tus informaciones, simplemente envía tus nuevos datos de KYC a través del comando /kyc.");
+    }
+  } catch (error) {
+    console.error(error);
+    ctx.reply(`Lo siento, ha ocurrido un error al obtener la información de KYC.`);
+  }
+});
+
+
 
 
 
