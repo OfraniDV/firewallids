@@ -716,15 +716,22 @@ bot.action('kyc_edit', async (ctx) => {
 
 
 //  ***************Comando para los Administradores Aprobar o Rechazar el KYC ***************
-//FUNCION APROBAR KYC
+// APROBAR KYC
 async function aprobarKYC(ctx) {
   const kycId = ctx.message.text.match(/\d+/g)[0];
-  const adminId = BigInt(ctx.from.id); // convertir el ID del admin a BigInt
+  const adminId = ctx.from.id.toString();
 
   try {
+    // Convertir los valores de user_id en kycfirewallids a BigInt
+    const kycData = await pool.query('SELECT * FROM kycfirewallids');
+    const kycRows = kycData.rows.map((row) => ({
+      ...row,
+      user_id: BigInt(row.user_id),
+    }));
+
     // Buscar la solicitud de KYC por el ID
-    const kyc = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [kycId]);
-    if (kyc.rowCount === 0) {
+    const kyc = kycRows.find((row) => row.user_id === BigInt(kycId));
+    if (!kyc) {
       console.error(`No se pudo encontrar la solicitud de KYC con ID ${kycId}`);
       return ctx.reply('Ha ocurrido un error. Por favor, inténtalo de nuevo más tarde.');
     }
@@ -737,22 +744,21 @@ async function aprobarKYC(ctx) {
     }
 
     // Actualizar la fila correspondiente en la tabla kycfirewallids
-    const userId = kyc.rows[0].user_id;
-    const pending = kyc.rows[0].pending; // obtener el valor de la columna pending
-    await pool.query('UPDATE kycfirewallids SET approved = true, admin_id = $1, pending = null, rejected = null WHERE id = $2', [adminId, kycId]);
+    await pool.query('UPDATE kycfirewallids SET approved = true, admin_id = $1, pending = null WHERE user_id = $2', [adminId, kycId]);
 
     // Si la columna pending es true, informar al usuario que su solicitud ha sido aprobada
-    if (pending === true) {
-      const chatMember = await bot.telegram.getChatMember(ID_GROUP_VERIFY_KYC, userId);
+    if (kyc.pending === true) {
+      const chatMember = await bot.telegram.getChatMember(ID_GROUP_VERIFY_KYC, kyc.user_id);
       if (chatMember && chatMember.user) {
         const userFirstName = chatMember.user.first_name;
         const userLastName = chatMember.user.last_name || '';
-        await bot.telegram.sendMessage(userId, `🎉 Hola ${userFirstName} ${userLastName}, tu KYC ha sido aprobado. ¡Gracias por verificar tu identidad con FirewallIDs!`);
+        await bot.telegram.sendMessage(kyc.user_id, `🎉 Hola ${userFirstName} ${userLastName}, tu KYC ha sido aprobado. ¡Gracias por verificar tu identidad con FirewallIDs!`);
       }
+      // Notificar al administrador que la solicitud de KYC ha sido aprobada
+      await ctx.reply(`KYC con ID ${kycId} aprobado exitosamente.`);
+    } else {
+      await ctx.reply(`El KYC con ID ${kycId} no estaba pendiente de aprobación.`);
     }
-
-    // Notificar al administrador que la solicitud de KYC ha sido aprobada
-    await ctx.reply(`KYC con ID ${kycId} aprobado exitosamente.`);
 
   } catch (err) {
     console.error(`Error aprobando KYC: ${err}`);
@@ -761,6 +767,77 @@ async function aprobarKYC(ctx) {
 }
 
 bot.command('aprobarkyc', aprobarKYC);
+
+
+
+
+
+
+
+
+
+
+
+
+// Función para rechazar KYC
+async function rechazarKYC(ctx) {
+  const kycId = ctx.message.text.match(/\d+/g)[0];
+  const adminId = BigInt(ctx.from.id); // Convertir el ID del admin a BigInt
+
+  try {
+    // Buscar la solicitud de KYC por el ID
+    const kyc = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [BigInt(kycId)]);
+
+    if (kyc.rowCount === 0) {
+      console.error(`No se pudo encontrar la solicitud de KYC con ID ${kycId}`);
+      return ctx.reply('Ha ocurrido un error. Por favor, inténtalo de nuevo más tarde.');
+    }
+
+    // Verificar que la solicitud de KYC esté pendiente
+    const pending = kyc.rows[0].pending;
+    if (!pending) {
+    console.error(`La solicitud de KYC con ID ${kycId} ya ha sido aprobada o rechazada`);
+    return ctx.reply(`La solicitud de KYC con ID ${kycId} ya ha sido aprobada o rechazada`);
+    }
+// Actualizar la fila correspondiente en la tabla kycfirewallids
+await pool.query('UPDATE kycfirewallids SET rejected = true, admin_id = $1, pending = null, approved = null WHERE id = $2', [adminId, BigInt(kycId)]);
+
+// Obtener el nombre del administrador que rechazó el KYC
+const adminFirstName = await getAdminFirstName(adminId);
+
+// Notificar al administrador que la solicitud de KYC ha sido rechazada
+await ctx.reply(`KYC con ID ${kycId} rechazado por ${adminFirstName}.`);
+
+// Notificar al usuario que su KYC ha sido rechazado y proporcionar un enlace de soporte
+const userId = kyc.rows[0].user_id;
+const chatMember = await bot.telegram.getChatMember(ID_GROUP_VERIFY_KYC, userId);
+if (chatMember && chatMember.user) {
+  const userFirstName = chatMember.user.first_name;
+  const userLastName = chatMember.user.last_name || '';
+  await bot.telegram.sendMessage(userId, `🚫 Lo siento, ${userFirstName} ${userLastName}, tu KYC ha sido rechazado. Por favor, ponte en contacto con nuestro equipo de soporte en ${SUPPORT_LINK} para obtener más información.`);
+}
+} catch (err) {
+  console.error(`Error rechazando KYC: ${err}`);
+  await ctx.reply('Ha ocurrido un error. Por favor, inténtalo de nuevo más tarde.');
+  }
+  }
+  
+  // Comando para aprobar KYC
+  bot.command('aprobarkyc', aprobarKYC);
+  
+
+
+
+
+
+
+
+  // Comando para rechazar KYC
+  bot.command('rechazarkyc', rechazarKYC);
+
+
+
+
 
 
 // Comando para rechazar el KYC
