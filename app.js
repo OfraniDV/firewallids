@@ -794,42 +794,42 @@ async function rechazarKYC(ctx) {
     const kyc = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [kycId]);
     if (kyc.rowCount === 0) {
       console.error(`No se pudo encontrar la solicitud de KYC con ID ${kycId}`);
-      return ctx.reply(`El KYC con ID ${kycId} no estaba pendiente de aprobación.`);
+      return ctx.reply('No se pudo encontrar la solicitud de KYC con el ID proporcionado.');
     }
 
-    // Verificar que el administrador tenga permiso para rechazar la solicitud de KYC
-    const admin = await pool.query('SELECT * FROM listanegra_administradores WHERE id = $1', [adminId]);
-    if (admin.rowCount === 0) {
-      console.error(`El administrador con ID ${adminId} no está autorizado para rechazar la solicitud de KYC con ID ${kycId}`);
-      return ctx.reply('Lo siento, no estás autorizado para rechazar la solicitud de KYC.');
+    const pending = kyc.rows[0].pending;
+    const approved = kyc.rows[0].approved;
+    const rejected = kyc.rows[0].rejected;
+
+    if (pending === false) {
+      console.error(`El KYC con ID ${kycId} no está pendiente de aprobación`);
+      return ctx.reply('El KYC con el ID proporcionado no está pendiente de aprobación.');
+    }
+
+    if (approved === true) {
+      console.error(`El KYC con ID ${kycId} ya fue aprobado anteriormente`);
+      return ctx.reply('El KYC con el ID proporcionado ya fue aprobado anteriormente.');
+    }
+
+    if (rejected === true) {
+      console.error(`El KYC con ID ${kycId} ya fue rechazado anteriormente`);
+      return ctx.reply('El KYC con el ID proporcionado ya fue rechazado anteriormente.');
     }
 
     // Actualizar la fila correspondiente en la tabla kycfirewallids
     const userId = kyc.rows[0].user_id;
-    const pending = kyc.rows[0].pending; // obtener el valor de la columna pending
-    const approved = kyc.rows[0].approved; // obtener el valor de la columna approved
+    await pool.query('UPDATE kycfirewallids SET rejected = true, pending = null, approved = false, admin_id = $1 WHERE user_id = $2', [adminId, userId]);
 
-    if (!pending) {
-      console.error(`El KYC con ID ${kycId} no estaba pendiente de aprobación.`);
-      return ctx.reply(`El KYC con ID ${kycId} no estaba pendiente de aprobación.`);
-    }
+    // Notificar al administrador que la solicitud de KYC ha sido rechazada
+    await ctx.reply(`KYC con ID ${kycId} rechazado exitosamente.`);
 
-    await pool.query('UPDATE kycfirewallids SET rejected = true, admin_id = $1, pending = null WHERE user_id = $2', [adminId, userId]);
-
-    if (approved) {
-      await pool.query('UPDATE kycfirewallids SET approved = false WHERE user_id = $1', [userId]);
-    }
-
-    // Notificar al usuario que la solicitud de KYC ha sido rechazada
+    // Notificar al usuario que su solicitud ha sido rechazada
     const chatMember = await bot.telegram.getChatMember(ID_GROUP_VERIFY_KYC, userId);
     if (chatMember && chatMember.user) {
       const userFirstName = chatMember.user.first_name;
       const userLastName = chatMember.user.last_name || '';
-      await bot.telegram.sendMessage(userId, `Lo siento, ${userFirstName} ${userLastName}, tu KYC ha sido rechazado. Por favor, inténtalo de nuevo con la información correcta.`);
+      await bot.telegram.sendMessage(userId, `Lo sentimos ${userFirstName} ${userLastName}, pero tu KYC ha sido rechazado. Por favor, inténtalo de nuevo con la información correcta.`);
     }
-
-    // Notificar al administrador que la solicitud de KYC ha sido rechazada
-    await ctx.reply(`KYC con ID ${kycId} rechazado exitosamente.`);
 
   } catch (err) {
     console.error(`Error rechazando KYC: ${err}`);
