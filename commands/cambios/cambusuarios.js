@@ -30,6 +30,13 @@ module.exports = async (ctx) => {
   }
 
   const cambios = await buscarCambiosCronologicosUsuarios(id);
+
+  if (cambios.length === 0) {
+    const message = `📝 No se encontraron cambios en el alias para el usuario de ID ${id}.`;
+    ctx.reply(message);
+    return;
+  }
+
   const uniqueDays = new Set(cambios.map((cambio) => new Date(cambio.tiempo).toLocaleDateString()));
   const uniqueChanges = Array.from(uniqueDays).map((uniqueDay) => {
     const changesOnDay = cambios.filter((cambio) => new Date(cambio.tiempo).toLocaleDateString() === uniqueDay);
@@ -41,26 +48,16 @@ module.exports = async (ctx) => {
   }).flat();
 
   const numCambios = uniqueChanges.length;
-  const message = numCambios > 0 ? `📝 El usuario de ID ${id} se llama ${nombreUsuario} y ha tenido ${numCambios} cambios en su alias:\n\n` : `📝 No se encontraron cambios en el alias para el usuario de ID ${id}.\n\n`;
-  const cambiosMessage = uniqueChanges.map((cambio, index, cambios) => {
+  const message = `📝 El usuario de ID ${id} se llama ${nombreUsuario} y ha tenido ${numCambios} cambios en su alias:\n\n`;
+  const cambiosMessage = uniqueChanges.map((cambio) => {
     const date = new Date(cambio.tiempo).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
     const time = new Date(cambio.tiempo).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    const alias = cambio.usuario;
-
-    if (index > 0 && cambios[index - 1].usuario === alias) {
-      return `🗓️ ${date} ${time} - ${alias} (cambio repetido)`;
-    }
-
-    return `🗓️ ${date} ${time} - ${alias}`;
+    return `🗓️ ${date} ${time} - ${cambio.usuario}`;
   }).join('\n');
   const response = message + cambiosMessage;
 
-if (numCambios === 1) {
-  ctx.reply(response);
-} else {
   const emojis = ['🎭', '🤹‍♂️', '🎬', '🎤', '🎧', '🎹'];
   const emojiIndex = Math.floor(Math.random() * emojis.length);
   const totalMessage = numCambios > 0 ? `👉 En total ${nombreUsuario} ha tenido ${numCambios} cambios en su alias ${emojis[emojiIndex]}` : `👉 No he interactuado aún con este usuario. 😕`;
   ctx.reply(response + '\n\n' + totalMessage);
-}
 };
