@@ -90,36 +90,9 @@ bot.action('kyc', async (ctx) => {
     return;
   }
 
-  // Obtiene el ID del usuario
-  const userId = ctx.from.id;
-
-  try {
-    // Consulta si el usuario ya completó el KYC en la tabla kycfirewallids
-    const kycResult = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [userId]);
-
-    if (kycResult.rows.length > 0) {
-      // Si el usuario ya completó el KYC, envía un mensaje indicando que ya completó el proceso
-      await ctx.answerCbQuery('Ya has completado el proceso KYC');
-      return;
-    }
-
-    // Consulta si el usuario ya completó el KYC en la tabla identidades
-    const idResult = await pool.query('SELECT * FROM identidades WHERE usuario_id = $1', [userId]);
-
-    if (idResult.rows.length > 0) {
-      // Si el usuario ya completó el KYC, envía un mensaje indicando que ya completó el proceso
-      await ctx.answerCbQuery('Ya has completado el proceso KYC');
-      return;
-    }
-
-    // Si el usuario no ha completado el KYC, borra el mensaje actual y muestra el menú KYC
-    await ctx.deleteMessage();
-    await mostrarMenu(ctx);
-
-  } catch (err) {
-    console.log(err);
-    await ctx.answerCbQuery('Ha ocurrido un error al procesar su solicitud');
-  }
+  // Borra el mensaje actual y muestra el menú KYC
+  await ctx.deleteMessage();
+  await mostrarMenu(ctx);
 });
 
 
@@ -143,38 +116,21 @@ bot.action('aceptoTerminos', async (ctx) => {
   const userId = ctx.from.id;
   console.log('User ID:', userId);
 
-  // Verificar si ya existe una fila correspondiente al usuario en la tabla
-  pool.query('SELECT * FROM kycfirewallids WHERE user_id::text = $1', [String(userId)], (err, result) => {
+  // Actualizar la columna de términos en la tabla kycfirewallids para el usuario
+  pool.query('UPDATE kycfirewallids SET terms_accepted = true WHERE user_id = $1', [BigInt(userId)], (err, result) => {
     if (err) {
       console.error(err);
       return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
     }
 
-    console.log('User ID found:', result.rowCount === 1);
+    console.log('Result:', result);
 
-    // Si no existe una fila correspondiente al usuario, crear una nueva fila
-    if (result.rowCount === 0) {
-      pool.query('INSERT INTO kycfirewallids (user_id, terms_accepted) VALUES ($1, true)', [BigInt(userId)], (err, result) => {
-        if (err) {
-          console.error(err);
-          return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
-        }
-
-        console.log('Result:', result);
-
-        if (result.rowCount === 1) {
-          ctx.answerCbQuery();
-          ctx.deleteMessage();
-          ctx.reply('¡Gracias por aceptar los términos y condiciones! Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
-        }
-      });
-    } else {
-      ctx.answerCbQuery();
-      ctx.deleteMessage();
-      ctx.reply('¡Ya has aceptado los términos y condiciones anteriormente! Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
-    }
+    ctx.answerCbQuery();
+    ctx.deleteMessage();
+    ctx.reply('¡Gracias por aceptar los términos y condiciones! Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
   });
 });
+
 
 
 
