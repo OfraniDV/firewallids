@@ -30,7 +30,7 @@ const pTimeout = require('p-timeout');
 
 //Creando la tabla del KYC si no existe
 const { createKycTable } = require('./KYC/kyctabla');
-
+const { convertIntegerToBigInt, convertIntegerValuesToBigInt } = require('./psql/converter')
 
 createKycTable()
   
