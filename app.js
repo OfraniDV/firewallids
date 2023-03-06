@@ -570,7 +570,7 @@ bot.action('kyc_approval', async (ctx) => {
   try {
     const userId = ctx.from.id;
     const query = `
-      SELECT name, identity_number, phone_number, email, address, municipality, province, kycarchivos, facebook, pending
+      SELECT name, identity_number, phone_number, email, address, municipality, province, kycarchivos, facebook, pending, approved
       FROM kycfirewallids
       WHERE user_id = ${userId.toString()}
     `;
@@ -583,9 +583,13 @@ bot.action('kyc_approval', async (ctx) => {
     }
 
     const pending = user.pending;
+    const approved = user.approved;
 
     if (pending) {
-      ctx.reply("Ya se ha enviado su solicitud al departamento de revisiones. Por favor, espere a que su solicitud sea revisada. Si tiene alguna pregunta, por favor, póngase en contacto con el grupo de soporte técnico.");
+      ctx.reply("Ya se ha enviado su solicitud al departamento de revisiones. Por favor, espere a que su solicitud sea revisada. Si tiene alguna pregunta, por favor, póngase en contacto con el grupo de soporte técnico. Tenga en cuenta que la revisión puede tardar hasta 48 horas.");
+      return;
+    } else if (approved) {
+      ctx.reply("¡Su KYC ya ha sido aprobado! Si necesita cambiar sus datos, por favor, póngase en contacto con el grupo de soporte técnico.");
       return;
     }
 
@@ -605,8 +609,6 @@ bot.action('kyc_approval', async (ctx) => {
       `Provincia: ${user.province}\n` +
       `Facebook: ${user.facebook}\n\n` +
       `Para aprobar este KYC, ejecute el comando /aprobarkyc <ID_USUARIO>. Para rechazarlo, use el comando /rechazarkyc <ID_USUARIO>.`;
-
-
 
     const kycFileSent = await ctx.telegram.sendDocument(process.env.ID_GROUP_VERIFY_KYC, { source: kycFileName }, { caption: reportMsg });
 
