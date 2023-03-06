@@ -356,9 +356,17 @@ bot.command('provincia', (ctx) => {
 
 
 //                                  FOTOS DEL KYC
-// Foto del Doc Id Front
 // Función que maneja el botón de acción "kycarchivos"
-bot.action('kycarchivos', (ctx) => {
+bot.action('kycarchivos', async (ctx) => {
+  // Obtener información del usuario
+  const userId = ctx.from.id;
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  
+  // Verificar si el usuario ya ha sido aprobado
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Lo siento, tus informaciones ya fueron aprobadas. No puedes editar tus informaciones. Si necesitas hacer alguna actualización, por favor contacta con soporte.');
+  }
+  
   const mensaje = `
     Para cumplir con los requisitos de KYC, por favor comprima las siguientes fotos en un archivo ZIP o RAR y envíelas a través de este bot:
 
@@ -372,17 +380,9 @@ bot.action('kycarchivos', (ctx) => {
     Si tiene algún problema con la carga de archivos, contáctenos en nuestro soporte al cliente.
 
     Gracias por su cooperación.`;
-  
+
   // Enviar mensaje al usuario que ha tocado el botón de acción
-  ctx.telegram.sendMessage(ctx.from.id, mensaje);
-});
-//////                                                  COMANDO KYC ARCHIVOS
-bot.command('kycarchivos', async (ctx) => {
-  // Verificar que el usuario haya aceptado los términos
-  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [ctx.from.id]);
-  if (!user.rows[0] || !user.rows[0].terms_accepted) {
-    return ctx.reply('Debes aceptar los términos antes de enviar los archivos.');
-  }
+  ctx.telegram.sendMessage(userId, mensaje);
 
   // Pedir al usuario que envíe el archivo comprimido
   await ctx.reply('Por favor, envía el archivo comprimido con tus documentos KYC.');
@@ -390,6 +390,12 @@ bot.command('kycarchivos', async (ctx) => {
   // Capturar el archivo enviado
   bot.on('message', async (ctx) => {
     if (ctx.message.document) {
+      // Verificar si el usuario ya ha sido aprobado (otra vez por seguridad)
+      const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+      if (user.rows[0] && user.rows[0].approved) {
+        return ctx.reply('Lo siento, tus informaciones ya fueron aprobadas. No puedes editar tus informaciones. Si necesitas hacer alguna actualización, por favor contacta con soporte.');
+      }
+
       const fileId = ctx.message.document.file_id;
       const file = await bot.telegram.getFile(fileId);
       const response = await axios.get(
@@ -398,7 +404,6 @@ bot.command('kycarchivos', async (ctx) => {
       );
 
       // Guardar el archivo en la base de datos
-      const userId = ctx.from.id;
       const kycArchivo = response.data;
       const query = 'UPDATE kycfirewallids SET kycarchivos=$1 WHERE user_id=$2 RETURNING *';
       const values = [kycArchivo, userId];
@@ -414,22 +419,36 @@ bot.command('kycarchivos', async (ctx) => {
   });
 });
 
-
-
-
 //                              ENLACE DE SU CUENTA DE FACEBOOK
 
 // Acción para pedir la cuenta de Facebook del usuario
-bot.action('insertFacebook', (ctx) => {
+bot.action('insertFacebook', async (ctx) => {
   const firstName = ctx.from.first_name;
+
+  // Consultar el estado del KYC del usuario en la base de datos
+  const userId = ctx.from.id;
+  const kycResult = await pool.query('SELECT approved FROM kycfirewallids WHERE user_id = $1', [userId]);
+
+  if (kycResult.rows.length > 0 && kycResult.rows[0].approved) {
+    ctx.reply('Tu KYC ya fue revisado y aprobado. No puedes editar tus informaciones. Si deseas hacer alguna actualización, por favor, entra en contacto con soporte.');
+    return;
+  }
 
   ctx.reply(`👤 ¡Hola ${firstName}! Para continuar con el proceso KYC, por favor proporciona tu cuenta de Facebook. Ejecuta el siguiente comando /facebook seguido de tu nombre de usuario. Por ejemplo: /facebook juan.perez`);
 });
-// comando
+
 // Comando para guardar la cuenta de Facebook del usuario
-bot.command('facebook', (ctx) => {
+bot.command('facebook', async (ctx) => {
   const userId = ctx.from.id;
   const facebook = ctx.message.text.substring(9);
+
+  // Consultar el estado del KYC del usuario en la base de datos
+  const kycResult = await pool.query('SELECT approved FROM kycfirewallids WHERE user_id = $1', [userId]);
+
+  if (kycResult.rows.length > 0 && kycResult.rows[0].approved) {
+    ctx.reply('Tu KYC ya fue revisado y aprobado. No puedes editar tus informaciones. Si deseas hacer alguna actualización, por favor, entra en contacto con soporte.');
+    return;
+  }
 
   // Actualizar la cuenta de Facebook del usuario en la base de datos
   pool.query('UPDATE kycfirewallids SET facebook = $1 WHERE user_id = $2', [facebook, userId], (err) => {
@@ -442,6 +461,7 @@ bot.command('facebook', (ctx) => {
     ctx.reply('👍 Gracias, hemos registrado tu cuenta de Facebook. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
+
 
 
 
