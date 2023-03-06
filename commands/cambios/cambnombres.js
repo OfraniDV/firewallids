@@ -1,5 +1,5 @@
 // Sobre la DB
-const { buscarCambiosCronologicosNombres, verificarRepeticionesIDNombres } = require('../../psql/dblogic');
+const { buscarCambiosCronologicosNombres } = require('../../psql/dblogic');
 const { pool } = require('../../psql/db');
 
 // Manejador de comandos para /cambnombres
@@ -32,25 +32,16 @@ module.exports = async (ctx) => {
   }
 
   const cambios = await buscarCambiosCronologicosNombres(id);
-  const uniqueDays = new Set(cambios.map((cambio) => new Date(cambio.tiempo).toLocaleDateString()));
-  const uniqueChanges = Array.from(uniqueDays).map((uniqueDay) => {
-    const changesOnDay = cambios.filter((cambio) => new Date(cambio.tiempo).toLocaleDateString() === uniqueDay);
-    const uniqueTimes = new Set(changesOnDay.map((change) => new Date(change.tiempo).toLocaleTimeString()));
-    const uniqueChangesOnDay = Array.from(uniqueTimes).map((uniqueTime) => {
-      return changesOnDay.find((change) => new Date(change.tiempo).toLocaleTimeString() === uniqueTime);
-    });
-    return uniqueChangesOnDay;
-  }).flat();
   
-  const message = uniqueChanges.length > 0 ? `📝 Estos son los cambios de nombre que he visto hasta ahora de ${nombreUsuario}:\n\n` : `📝 No he visto que ${nombreUsuario} se haya cambiado el nombre aún.`;
-  const cambiosMessage = uniqueChanges.map((cambio) => {
+  const message = cambios.length > 0 ? `📝 Estos son los cambios de nombre que he visto hasta ahora de ${nombreUsuario}:\n\n` : `📝 No he visto que ${nombreUsuario} se haya cambiado el nombre aún.`;
+  const cambiosMessage = cambios.map((cambio) => {
     const date = new Date(cambio.tiempo).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
     const time = new Date(cambio.tiempo).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     return `🗓️ ${date} ${time} - ${cambio.nombres}`;
   }).join('\n');
   const response = message + '\n' + cambiosMessage;
 
-  const numCambios = uniqueChanges.length;
+  const numCambios = cambios.length;
   if (numCambios === 1) {
     ctx.reply(response);
   } else {

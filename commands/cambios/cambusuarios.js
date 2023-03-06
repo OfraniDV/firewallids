@@ -1,8 +1,8 @@
-//Sobre la DB
+// Sobre la DB
+const { buscarCambiosCronologicosUsuarios } = require('../../psql/dblogic');
 const { pool } = require('../../psql/db');
-const { buscarCambiosCronologicosUsuarios, verificarRepeticionesIDUsuarios } = require('../../psql/dblogic');
 
-// Manejador de comandos para /cambusuarios
+// Manejador de comandos para /alias
 module.exports = async (ctx) => {
   let id, nombreUsuario;
 
@@ -15,41 +15,26 @@ module.exports = async (ctx) => {
   }
 
   if (ctx.message.text.split(' ').length > 1) {
-    const input = ctx.message.text.split(' ')[1];
-    if (input.startsWith('@')) {
-      ctx.reply(`🚫 Acceso denegado. Solo puedo buscar cambios para IDs de usuario. Por favor, proporcione un ID en su lugar.`);
-      return;
-    } else if (!isNaN(input)) {
-      id = input;
+    id = ctx.message.text.split(' ')[1];
+    if (id.startsWith('@')) {
+      try {
+        const user = await ctx.telegram.getChat(id.substring(1));
+        id = user.id;
+        nombreUsuario = user.first_name;
+      } catch (error) {
+        ctx.reply(`🚫 No pude encontrar al usuario con alias @${id.substring(1)}. Por favor intenta con un ID de usuario.`);
+        return;
+      }
+    } else {
       const userInfo = await ctx.telegram.getChat(id);
       nombreUsuario = userInfo.first_name;
-    } else {
-      ctx.reply(`🚫 Acceso denegado. Solo puedo buscar cambios para IDs de usuario. Por favor, proporcione un ID en su lugar.`);
-      return;
     }
   }
 
   const cambios = await buscarCambiosCronologicosUsuarios(id);
 
-  if (cambios.length === 0) {
-    const message = `📝 No se encontraron cambios en el alias para el usuario de ID ${id}.`;
-    ctx.reply(message);
-    return;
-  }
-
-  const uniqueDays = new Set(cambios.map((cambio) => new Date(cambio.tiempo).toLocaleDateString()));
-  const uniqueChanges = Array.from(uniqueDays).map((uniqueDay) => {
-    const changesOnDay = cambios.filter((cambio) => new Date(cambio.tiempo).toLocaleDateString() === uniqueDay);
-    const uniqueTimes = new Set(changesOnDay.map((change) => new Date(change.tiempo).toLocaleTimeString()));
-    const uniqueChangesOnDay = Array.from(uniqueTimes).map((uniqueTime) => {
-      return changesOnDay.find((change) => new Date(change.tiempo).toLocaleTimeString() === uniqueTime);
-    });
-    return uniqueChangesOnDay;
-  }).flat();
-
-  const numCambios = uniqueChanges.length;
-  const message = `📝 El usuario de ID ${id} se llama ${nombreUsuario} y ha tenido ${numCambios} cambios en su alias:\n\n`;
-  const cambiosMessage = uniqueChanges.map((cambio) => {
+  const message = cambios.length > 0 ? `📝 El usuario de ID ${id} se llama ${nombreUsuario} y ha tenido ${cambios.length} cambios en su alias:\n\n` : `📝 No se encontraron cambios en el alias para el usuario de ID ${id}.`;
+  const cambiosMessage = cambios.map((cambio) => {
     const date = new Date(cambio.tiempo).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
     const time = new Date(cambio.tiempo).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     return `🗓️ ${date} ${time} - ${cambio.usuario}`;
@@ -58,6 +43,6 @@ module.exports = async (ctx) => {
 
   const emojis = ['🎭', '🤹‍♂️', '🎬', '🎤', '🎧', '🎹'];
   const emojiIndex = Math.floor(Math.random() * emojis.length);
-  const totalMessage = numCambios > 0 ? `👉 En total ${nombreUsuario} ha tenido ${numCambios} cambios en su alias ${emojis[emojiIndex]}` : `👉 No he interactuado aún con este usuario. 😕`;
+  const totalMessage = cambios.length > 0 ? `👉 En total ${nombreUsuario} ha tenido ${cambios.length} cambios en su alias ${emojis[emojiIndex]}` : `👉 No he interactuado aún con este usuario. 😕`;
   ctx.reply(response + '\n\n' + totalMessage);
 };
