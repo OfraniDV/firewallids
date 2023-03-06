@@ -86,7 +86,7 @@ bot.action('kyc', async (ctx) => {
   // Verifica si el botón se está ejecutando en el chat privado con el bot
   if (ctx.chat.type !== 'private') {
     // Si no es el chat privado con el bot, muestra un mensaje de acceso denegado
-    await ctx.answerCbQuery('🚫 Acceso denegado. Este botón solo está disponible en el chat privado con el bot');
+    await ctx.answerCbQuery('🚫 Acceso denegado! Este botón solo está disponible en el chat privado con el bot');
     return;
   }
 
