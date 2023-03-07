@@ -38,7 +38,7 @@ const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
 const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
 const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
 const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
-
+const { listarUsuariosEnListaNegra } = require('./listanegra/listarlistanegra');
 
 // IMPORTACION para el KYC 
 const { kycMenu } = require('./KYC/kycmenu')
@@ -46,6 +46,7 @@ const { mostrarTerminos, aceptoTerminos } = require ('./KYC/kycterminos')
 const { getUserResponses } = require('./KYC/kycrespuestas');
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacion');
 const { lsverificadosCommand } = require('./KYC/listarverificados');
+
 
 
 // Actualizar a BRPlus
@@ -59,8 +60,6 @@ require('./KYC/updateuser');
 const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 const ID_GROUP_VERIFY_KYC = process.env.ID_GROUP_VERIFY_KYC;
 const owner = process.env.ID_USER_OWNER;
-
-
 
 
 const urlKyc = process.env.URL_KYC;
@@ -147,7 +146,7 @@ bot.action('cancelKYC', async (ctx) => {
 //                          Acciones y Comandos del KYC               /////////////
 ///////////////////////////////////////////////////////////////////////////////////
 
-// Listas Verificados
+// Listar Verificados
 bot.command('lsverificados', async (ctx) => {
   try {
     const adminId = ctx.from.id;
@@ -162,6 +161,26 @@ bot.command('lsverificados', async (ctx) => {
     }
   } catch (error) {
     console.error(`Error al ejecutar el comando /lsverificados: ${error}`);
+    await ctx.reply('Ocurrió un error al ejecutar el comando');
+  }
+});
+
+// Listar los usuarios en lista negra
+bot.command('lslistanegra', async (ctx) => {
+  try {
+    const adminId = ctx.from.id;
+    const isAdmin = await pool.query(`SELECT id FROM listanegra_administradores WHERE id = ${adminId}`);
+    
+    if (isAdmin.rowCount > 0) {
+      // Si el usuario es un administrador, ejecuta el comando listarUsuariosEnListaNegra
+      await ctx.reply('Estamos generando la lista de usuarios en lista negra, esto puede tardar unos momentos. Por favor, ten paciencia.');
+      await listarUsuariosEnListaNegra(ctx);
+    } else {
+      // Si no es un administrador, envía un mensaje de error
+      await ctx.reply('ACCESO DENEGADO\N No tienes permiso para ejecutar este comando');
+    }
+  } catch (error) {
+    console.error(`Error al ejecutar el comando /lslistanegra: ${error}`);
     await ctx.reply('Ocurrió un error al ejecutar el comando');
   }
 });

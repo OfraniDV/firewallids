@@ -3,6 +3,7 @@ const { Markup } = require('telegraf');
 const moment = require('moment-timezone');
 const fs = require('fs');
 const path = require('path');
+const ExcelJS = require('exceljs');
 
 const formatTable = (rows, columns) => {
   const header = columns.join(' | ');
@@ -18,21 +19,37 @@ const formatTable = (rows, columns) => {
 
 const lsverificadosCommand = async (ctx) => {
   try {
-    const result = await pool.query(
+    const verificados = await pool.query(
       `SELECT DISTINCT ON (usuario_id) usuario_id, usuario_usuario, usuario_nombre, tiempo_creacion FROM identidades WHERE estado = 1 ORDER BY usuario_id, tiempo_creacion ASC`
     );
+    const listanegra = await pool.query(`SELECT id FROM listanegra`);
 
     const columns = ['usuario_id', 'usuario_usuario', 'usuario_nombre'];
-    const table = formatTable(result.rows, columns);
+    const rows = verificados.rows.filter((row) => !listanegra.rows.some((item) => item.id === row.usuario_id));
+    const table = formatTable(rows, columns);
 
     const currentDateTime = moment.tz('America/Havana').format('DD/MM/YYYY hh:mm A');
 
-    const header = `Estos usuarios tienen sus KYC aprobados en el sistema.\nTotal de usuarios verificados: ${result.rows.length}\nFecha y hora de generación del archivo: ${currentDateTime}\n`;
+    const header = `Estos usuarios tienen sus KYC aprobados en el sistema.\nTotal de usuarios verificados: ${rows.length}\nFecha y hora de generación del archivo: ${currentDateTime}\n`;
 
-    const filename = `lista_verificados_${currentDateTime.replace(/[\W_]/g, '_')}.txt`;
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Lista de usuarios verificados');
+
+    worksheet.columns = [
+      { header: 'ID', key: 'usuario_id', width: 10 },
+      { header: 'Usuario', key: 'usuario_usuario', width: 20 },
+      { header: 'Nombre', key: 'usuario_nombre', width: 30 },
+      { header: 'Fecha de KYC', key: 'tiempo_creacion', width: 20 }
+    ];
+
+    rows.forEach((row) => {
+      worksheet.addRow(row);
+    });
+
+    const filename = `lista_verificados_${currentDateTime.replace(/[\W_]/g, '_')}.xlsx`;
     const filepath = path.join(__dirname, '..', filename);
 
-    fs.writeFileSync(filepath, header + table);
+    await workbook.xlsx.writeFile(filepath);
 
     await ctx.replyWithDocument({ source: filepath }, { caption: `Esta es la lista de usuarios verificados generada el ${currentDateTime} en el Sistema de Reputación Plus y Firewallids.` });
 
