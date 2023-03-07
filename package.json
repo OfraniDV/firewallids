@@ -12,7 +12,6 @@
     "fs": "^0.0.1-security",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.41",
-    "node-excel-export": "^1.4.4",
     "pg": "^8.9.0",
     "request": "^2.88.2",
     "telegraf": "^4.11.2",
