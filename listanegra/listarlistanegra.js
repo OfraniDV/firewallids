@@ -1,6 +1,8 @@
 const { pool } = require('../psql/db');
 const moment = require('moment-timezone');
 const excel = require('exceljs');
+const fs = require('fs');
+
 
 const formatTable = (rows) => {
   const header = ['Fila', 'ID', 'Motivo', 'Tiempo'].map((value) => ({ name: value }));
