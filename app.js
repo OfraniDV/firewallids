@@ -30,7 +30,6 @@ const pTimeout = require('p-timeout');
 
 //Creando la tabla del KYC si no existe
 const { createKycTable } = require('./KYC/kyctabla');
-const { convertIntegerToBigInt, convertIntegerValuesToBigInt } = require('./psql/converter')
 
 createKycTable()
   
@@ -46,7 +45,12 @@ const { kycMenu } = require('./KYC/kycmenu')
 const { mostrarTerminos, aceptoTerminos } = require ('./KYC/kycterminos')
 const { getUserResponses } = require('./KYC/kycrespuestas');
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacion');
+const { lsverificadosCommand } = require('./KYC/listarverificados');
 
+
+// Actualizar a BRPlus
+require('./KYC/updatekyc');
+require('./KYC/updateuser');
 
 
 
@@ -71,7 +75,6 @@ const rules  = process.env.BOT_RULES;
 
 
 // ****************          ****  // KYC //  *****       ************
-
 //Botón KYC del Primer menu de COMANDOS PARA USUARIOS
 bot.action('kyc', async (ctx) => {
   // Verifica si el botón se está ejecutando en el chat privado con el bot
@@ -141,8 +144,13 @@ bot.action('cancelKYC', async (ctx) => {
 
 
 ///////////////////////////////////////////////////////////////////////////////////
-//                          Acciones de los Botones de preguntas del KYC
+//                          Acciones y Comandos del KYC               /////////////
 ///////////////////////////////////////////////////////////////////////////////////
+
+// Listas Verificados
+bot.command('lsverificados', lsverificadosCommand);
+
+
 
 //                                               Nombre Completo
 // Acción para pedir el nombre completo del usuario
@@ -864,11 +872,6 @@ async function aprobarKYC(ctx) {
 bot.command('aprobarkyc', aprobarKYC);
 
 
-
-
-
-
-
 // Comando para rechazar el KYC
 //FUNCION RECHAZAR KYC
 async function rechazarKYC(ctx) {
@@ -928,8 +931,12 @@ bot.command('rechazarkyc', rechazarKYC);
 
 
 
-
-
+//        *** ACTUALIZAR EL KYC DE FIREWALLIDS EN BR+ ***
+bot.command('actualizar', async (ctx) => {
+  const user_id = ctx.from.id;
+  await actualizarDatosUsuario(user_id);
+  ctx.reply('Se actualizaron tus datos correctamente');
+});
 
 
 
