@@ -148,7 +148,24 @@ bot.action('cancelKYC', async (ctx) => {
 ///////////////////////////////////////////////////////////////////////////////////
 
 // Listas Verificados
-bot.command('lsverificados', lsverificadosCommand);
+bot.command('lsverificados', async (ctx) => {
+  try {
+    const adminId = ctx.from.id;
+    const isAdmin = await pool.query(`SELECT id FROM listanegra_administradores WHERE id = ${adminId}`);
+    
+    if (isAdmin.rowCount > 0) {
+      // Si el usuario es un administrador, ejecuta el comando lsverificadosCommand
+      await lsverificadosCommand(ctx);
+    } else {
+      // Si no es un administrador, envía un mensaje de error
+      await ctx.reply('ACCESO DENEGADO\N No tienes permiso para ejecutar este comando');
+    }
+  } catch (error) {
+    console.error(`Error al ejecutar el comando /lsverificados: ${error}`);
+    await ctx.reply('Ocurrió un error al ejecutar el comando');
+  }
+});
+
 
 
 
