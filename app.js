@@ -71,15 +71,6 @@ const rules  = process.env.BOT_RULES;
 
 
 // ****************          ****  // KYC //  *****       ************
-// Manejador del comando kyc
-bot.command('kyc', (ctx) => {
-  if (ctx.chat.type !== 'private') {
-    ctx.reply('🚫 Acceso denegado. Por favor, ejecuta este comando en el chat privado del bot.');
-  } else {
-    ctx.reply('👤 Bienvenido al proceso de KYC. Por favor, selecciona la opción que deseas ingresar:', kycMenu);
-  }
-});
-  
 
 //Botón KYC del Primer menu de COMANDOS PARA USUARIOS
 bot.action('kyc', async (ctx) => {
@@ -155,15 +146,32 @@ bot.action('cancelKYC', async (ctx) => {
 ///////////////////////////////////////////////////////////////////////////////////
 
 //                                               Nombre Completo
-bot.action('insertName', (ctx) => {
+// Acción para pedir el nombre completo del usuario
+bot.action('insertName', async (ctx) => {
   const firstName = ctx.from.first_name;
-  ctx.reply(`📝¡${firstName}!, para cumplir con el proceso KYC, por favor proporciona tu nombre real como aparece en tu documento de identidad. Ejecuta el siguiente comando /nombre seguido de tu nombre completo.`);
+  const userId = ctx.from.id;
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
+
+  ctx.reply(`📝 ¡${firstName}!, para cumplir con el proceso KYC, por favor proporciona tu nombre real como aparece en tu documento de identidad. Ejecuta el siguiente comando /nombre seguido de tu nombre completo.`);
 });
 
+
+
 // Comando para guardar el nombre completo del usuario
-bot.command('nombre', (ctx) => {
+bot.command('nombre', async (ctx) => {
   const userId = ctx.from.id;
   const name = ctx.message.text.substring(7).trim();
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   // Consultar si el usuario ya tiene un nombre registrado en la base de datos
   pool.query('SELECT name FROM kycfirewallids WHERE user_id = $1', [userId], (err, result) => {
@@ -201,19 +209,34 @@ bot.command('nombre', (ctx) => {
 });
 
 
+
 //                          NUMERO DE IDENTIDAD
 // Acción para pedir el número de identidad del usuario
-bot.action('insertIdentityNumber', (ctx) => {
-  const firstName = ctx.from.first_name;
+bot.action('insertIdentityNumber', async (ctx) => {
+  const userId = ctx.from.id;
 
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
+
+  const firstName = ctx.from.first_name;
   ctx.reply(`🆔 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu número de identidad real. Ejecuta el siguiente comando /identidad seguido de tu número de identidad sin espacios ni guiones. Por ejemplo: /identidad ************.`);
 });
 
-//El Comando Identidad
+
+
 // Comando para guardar el número de identidad del usuario
-bot.command('identidad', (ctx) => {
+bot.command('identidad', async (ctx) => {
   const userId = ctx.from.id;
   const identityNumber = ctx.message.text.substring(10).replace(/ /g, '');
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   // Actualizar el número de identidad del usuario en la base de datos
   pool.query('UPDATE kycfirewallids SET identity_number = $1 WHERE user_id = $2', [identityNumber, userId], (err) => {
@@ -227,18 +250,39 @@ bot.command('identidad', (ctx) => {
   });
 });
 
+
+
+
 //                    NUMERO DE TELEFONO
 // Acción para pedir el número de teléfono del usuario
-bot.action('insertPhoneNumber', (ctx) => {
-  const firstName = ctx.from.first_name;
+bot.action('insertPhoneNumber', async (ctx) => {
+  try {
+    const userId = ctx.from.id;
+    const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
 
-  ctx.reply(`📞 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu número de teléfono. Ejecuta el siguiente comando /telefono seguido de tu número de teléfono con el código de país sin espacios ni guiones. Por ejemplo: /telefono +1234567890.`);
+    if (user.rows[0] && user.rows[0].approved) {
+      return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+    }
+
+    const firstName = ctx.from.first_name;
+    ctx.reply(`📞 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu número de teléfono. Ejecuta el siguiente comando /telefono seguido de tu número de teléfono con el código de país sin espacios ni guiones. Por ejemplo: /telefono +1234567890.`);
+  } catch (error) {
+    console.error(error);
+    ctx.reply(`Lo siento, ha ocurrido un error al obtener la información de KYC.`);
+  }
 });
-//COMANDO DEL NUMERO DE TELEFONO
+
+
 // Comando para guardar el número de teléfono del usuario
-bot.command('telefono', (ctx) => {
+bot.command('telefono', async (ctx) => {
   const userId = ctx.from.id;
   const phoneNumber = ctx.message.text.substring(9).replace(/ /g, '');
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   // Actualizar el número de teléfono del usuario en la base de datos
   pool.query('UPDATE kycfirewallids SET phone_number = $1 WHERE user_id = $2', [phoneNumber, userId], (err) => {
@@ -252,18 +296,35 @@ bot.command('telefono', (ctx) => {
   });
 });
 
+
+
+
 //                                      CORREO ELECTRONICO
 // Acción para pedir la dirección de correo electrónico del usuario
-bot.action('insertEmail', (ctx) => {
+bot.action('insertEmail', async (ctx) => {
   const firstName = ctx.from.first_name;
+  const userId = ctx.from.id;
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   ctx.reply(`📧 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu dirección de correo electrónico. Ejecuta el siguiente comando /correo seguido de tu dirección de correo electrónico. Por ejemplo: /correo ejemplo@ejemplo.com.`);
 });
-// comando del email
+
+
 // Comando para guardar la dirección de correo electrónico del usuario
-bot.command('correo', (ctx) => {
+bot.command('correo', async (ctx) => {
   const userId = ctx.from.id;
   const email = ctx.message.text.substring(8);
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   // Actualizar el correo electrónico del usuario en la base de datos
   pool.query('UPDATE kycfirewallids SET email = $1 WHERE user_id = $2', [email, userId], (err) => {
@@ -277,18 +338,33 @@ bot.command('correo', (ctx) => {
   });
 });
 
+
 //                                                  DIRECCION PARTICULAR
 // Acción para pedir la dirección del usuario
-bot.action('insertAddress', (ctx) => {
+bot.action('insertAddress', async (ctx) => {
   const firstName = ctx.from.first_name;
+  const userId = ctx.from.id;
+
+  // Verificar si el usuario tiene KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   ctx.reply(`🏠 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu dirección. Ejecuta el siguiente comando /direccion seguido de tu dirección. Por ejemplo: /direccion Calle 123 # 45 - 67.`);
 });
 
+
 // Comando para guardar la dirección del usuario
-bot.command('direccion', (ctx) => {
+bot.command('direccion', async (ctx) => {
   const userId = ctx.from.id;
   const address = ctx.message.text.substring(11);
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   // Actualizar la dirección del usuario en la base de datos
   pool.query('UPDATE kycfirewallids SET address = $1 WHERE user_id = $2', [address, userId], (err) => {
@@ -303,18 +379,31 @@ bot.command('direccion', (ctx) => {
 });
 
 
+
 //                                                  MUNICIPIO
 // Acción para pedir el municipio del usuario
-bot.action('insertMunicipality', (ctx) => {
+bot.action('insertMunicipality', async (ctx) => {
   const firstName = ctx.from.first_name;
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [ctx.from.id]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   ctx.reply(`🏙️ ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu municipio. Ejecuta el siguiente comando /municipio seguido de tu municipio. Por ejemplo: /municipio Medellín.`);
 });
-// comando
+
 // Comando para guardar el municipio del usuario
-bot.command('municipio', (ctx) => {
+bot.command('municipio', async (ctx) => {
   const userId = ctx.from.id;
   const municipality = ctx.message.text.substring(10);
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   // Actualizar el municipio del usuario en la base de datos
   pool.query('UPDATE kycfirewallids SET municipality = $1 WHERE user_id = $2', [municipality, userId], (err) => {
@@ -329,18 +418,32 @@ bot.command('municipio', (ctx) => {
 });
 
 
+
+
 //                                                PROVINCIA 
 // Acción para pedir la provincia del usuario
-bot.action('insertProvince', (ctx) => {
+bot.action('insertProvince', async (ctx) => {
   const firstName = ctx.from.first_name;
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [ctx.from.id]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   ctx.reply(`🌅 ¡${firstName}! Para continuar con el proceso KYC, por favor proporciona tu provincia. Ejecuta el siguiente comando /provincia seguido de tu provincia. Por ejemplo: /provincia Antioquia.`);
 });
 
 // Comando para guardar la provincia del usuario
-bot.command('provincia', (ctx) => {
+bot.command('provincia', async (ctx) => {
   const userId = ctx.from.id;
   const province = ctx.message.text.substring(10);
+
+  // Verificar que el usuario no tenga KYC aprobado
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
+  if (user.rows[0] && user.rows[0].approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado por lo que no puedes editar tus datos. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
 
   // Actualizar la provincia del usuario en la base de datos
   pool.query('UPDATE kycfirewallids SET province = $1 WHERE user_id = $2', [province, userId], (err) => {
@@ -353,6 +456,7 @@ bot.command('provincia', (ctx) => {
     ctx.reply('👍 Gracias, hemos registrado tu provincia. Ahora toca el próximo botón para continuar con el proceso de KYC.');
   });
 });
+
 
 
 //                                  FOTOS DEL KYC
@@ -375,7 +479,7 @@ bot.action('kycarchivos', async (ctx) => {
     3. Selfie sosteniendo una hoja en blanco con su firma, la fecha actual, el nombre del bot y su documento frontal enfocado en frente del papel.
     4. Foto de una transferencia o depósito en el banco donde se vea el número de la sucursal de su banco y aparezca su nombre igual que en su documento.
 
-    Asegúrese de que todas las fotos estén enfocadas y centradas correctamente antes de enviarlas. Cuando tenga todas las fotos listas, ejecute el comando /kycarchivos para enviar los archivos comprimidos.
+    Asegúrese de que todas las fotos estén enfocadas y centradas correctamente antes de enviarlas..
 
     Si tiene algún problema con la carga de archivos, contáctenos en nuestro soporte al cliente.
 
@@ -385,7 +489,7 @@ bot.action('kycarchivos', async (ctx) => {
   ctx.telegram.sendMessage(userId, mensaje);
 
   // Pedir al usuario que envíe el archivo comprimido
-  await ctx.reply('Por favor, envía el archivo comprimido con tus documentos KYC.');
+  await ctx.reply('Por favor, envíame el archivo comprimido con tus documentos KYC.');
 
   // Capturar el archivo enviado
   bot.on('message', async (ctx) => {
@@ -473,7 +577,7 @@ bot.action('enviarRevisiones', async (ctx) => {
   try {
     const userId = ctx.from.id;
     const query = `
-      SELECT name, identity_number, phone_number, email, address, municipality, province, kycarchivos, facebook
+      SELECT name, identity_number, phone_number, email, address, municipality, province, kycarchivos, facebook, approved
       FROM kycfirewallids
       WHERE user_id = ${userId.toString()}
     `;
@@ -485,6 +589,11 @@ bot.action('enviarRevisiones', async (ctx) => {
       return;
     }
 
+    // Comprobar si el usuario ya ha sido aprobado
+    if (user.approved) {
+      ctx.reply('Tu KYC ya ha sido revisado y aprobado. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+      return;
+    }
     // Comprobar si se han enviado todos los campos importantes
     const name = user.name || 'Falta esta información';
     const identity_number = user.identity_number || 'Falta esta información';
