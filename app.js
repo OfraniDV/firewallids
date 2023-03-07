@@ -104,25 +104,24 @@ bot.action('cancelarkyc', (ctx) => {
 
 // Acción para aceptar los términos y condiciones
 bot.action('aceptoTerminos', async (ctx) => {
-  const userId = ctx.from.id;
+  const userId = BigInt(ctx.from.id);
   console.log('User ID:', userId);
 
-  // Actualizar la columna de términos en la tabla kycfirewallids para el usuario
-  pool.query('UPDATE kycfirewallids SET terms_accepted = true WHERE user_id = $1', [BigInt(userId)], (err, result) => {
-    if (err) {
-      console.error(err);
-      return ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo más tarde.');
-    }
+  // Verificar si el usuario ya existe en la tabla
+  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [userId]);
 
-    console.log('Result:', result);
+  if (user.rows.length === 0) {
+    // Si el usuario no existe en la tabla, insertar una nueva fila
+    await pool.query('INSERT INTO kycfirewallids (user_id, terms_accepted) VALUES ($1, true)', [userId]);
+  } else {
+    // Si el usuario ya existe en la tabla, actualizar la columna de términos
+    await pool.query('UPDATE kycfirewallids SET terms_accepted = true WHERE user_id = $1', [userId]);
+  }
 
-    ctx.answerCbQuery();
-    ctx.deleteMessage();
-    ctx.reply('¡Gracias por aceptar los términos y condiciones! Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
-  });
+  ctx.answerCbQuery();
+  ctx.deleteMessage();
+  ctx.reply('¡Gracias por aceptar los términos y condiciones! Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
 });
-
-
 
 
 // Manejador del evento callback_query para el botón "No Acepto"
