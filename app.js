@@ -47,7 +47,7 @@ const { getUserResponses } = require('./KYC/kycrespuestas');
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacion');
 const { lsverificadosCommand } = require('./KYC/listarverificados');
 const { updateAllKyc } = require('./KYC/updatekyc');
-const { updateUser } = require('./KYC/updateuser');
+const { updateUsers } = require('./KYC/updateusers');
 
 // Importacion para la Lista Negra
 // Importamos la función cleanGroups desde el archivo donde la definiste
@@ -55,7 +55,7 @@ const { cleanGroups } = require('./listanegra/clean');
 
 // Actualizar a BRPlus
 require('./KYC/updatekyc');
-require('./KYC/updateuser');
+require('./KYC/updateusers');
 
 
 
@@ -140,14 +140,9 @@ bot.command('updatekyc', async (ctx) => {
 });
 
 // Actualizar el KYC de la Tabla Firewallids a Identidades para BRPlus
-bot.command('updateuser', async (ctx) => {
-  try {
-    await updateUser();
-    ctx.reply('KYC actualizado correctamente para todos los usuarios desde Identidades');
-  } catch (err) {
-    console.error(`Error al actualizar KYC para todos los usuarios: ${err}`);
-    ctx.reply('Ocurrió un error al actualizar KYC. Por favor, inténtelo de nuevo más tarde');
-  }
+bot.command('/updateusers', async (ctx) => {
+  await updateUsers();
+  ctx.reply('Los usuarios se han actualizado correctamente.');
 });
 
 
