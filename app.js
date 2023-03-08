@@ -63,6 +63,16 @@ const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 const ID_GROUP_VERIFY_KYC = process.env.ID_GROUP_VERIFY_KYC;
 const owner = process.env.ID_USER_OWNER;
 
+bot.start((ctx) => {
+  throw new Error('Algo salió mal');
+});
+
+bot.catch((err, ctx) => {
+  console.log(`Ocurrió un error para el usuario ${ctx.from.username}:`, err);
+  ctx.reply('Lo siento, hubo un error en la ejecución de este comando.');
+});
+
+
 
 const urlKyc = process.env.URL_KYC;
 const urlWeb = process.env.URL_WEB;
