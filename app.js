@@ -47,7 +47,9 @@ const { getUserResponses } = require('./KYC/kycrespuestas');
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacion');
 const { lsverificadosCommand } = require('./KYC/listarverificados');
 
-
+// Importacion para la Lista Negra
+// Importamos la función cleanGroups desde el archivo donde la definiste
+const { cleanGroups } = require('./listanegra/clean');
 
 // Actualizar a BRPlus
 require('./KYC/updatekyc');
@@ -71,6 +73,30 @@ const canalD = process.env.ID_CHANNEL_REPORTS;
 const gRecom = process.env.ID_GROUP_RECOMEND;
 const nosotr = process.env.NOSOTROS;
 const rules  = process.env.BOT_RULES;
+
+////    **** LISTA NEGRA ****              ////
+// Creamos el comando "/clean" y lo limitamos solo a los administradores de la lista negra
+bot.command('clean', async (ctx) => {
+  const admin = await pool.query('SELECT * FROM listanegra_administradores WHERE id = $1', [ctx.from.id]);
+
+  if (!admin.rows[0]) {
+    ctx.reply('Lo siento, no estás autorizado para ejecutar este comando. Solo los administradores de la lista negra pueden ejecutar este comando.');
+    return;
+  }
+
+  // Enviamos un mensaje al usuario que ejecutó el comando
+  ctx.replyWithChatAction('typing');
+  setTimeout(async () => {
+    await ctx.reply(`🧹 **¡Atención!** Se iniciará una limpieza global en breve. Este proceso puede tardar unos minutos, por favor ten paciencia. 💪`, {
+      parse_mode: 'Markdown',
+    });
+    // Llamamos a la función cleanGroups para realizar la limpieza
+    await cleanGroups(ctx);
+  }, 1000);
+});
+
+
+
 
 
 // ****************          ****  // KYC //  *****       ************

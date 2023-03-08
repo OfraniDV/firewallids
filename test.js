@@ -1,15 +1,21 @@
-const { pool } = require('./psql/db');
+require('dotenv').config();
+const { Telegraf } = require('telegraf');
 
-const getUsers = async () => {
-  try {
-    const result = await pool.query(
-      `SELECT usuario_id, usuario_usuario, usuario_nombre FROM identidades WHERE estado = 1`
-    );
-    console.log(`Usuarios encontrados:`);
-    console.table(result.rows);
-  } catch (err) {
-    console.error(`Error al obtener los usuarios: ${err}`);
-  }
-};
+const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 
-getUsers();
+bot.start((ctx) => {
+  const chatId = ctx.chat.id;
+  const botId = bot.botInfo.id;
+  
+  // Obtener la lista de chats donde está el usuario actual
+  bot.telegram.getChatMember(chatId, botId).then((member) => {
+    if (member.status === 'member' || member.status === 'administrator') {
+      // Si el bot es miembro del chat, lo mostramos por consola
+      console.log(`El bot está en el chat ${chatId}`);
+    }
+  }).catch((error) => {
+    console.error(error);
+  });
+});
+
+bot.launch();
