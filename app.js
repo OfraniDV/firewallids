@@ -21,8 +21,11 @@ const { comandosOptions } = require('./commands/comandos/comandos');
 const { comandosUsuariosOptions } = require('./commands/comandos/usuarios');
 const { administradoresOptions } = require('./commands/comandos/admins');
 const { negociosOptions } = require('./commands/negocios/negocios');
-const cambUsuarios = require('./commands/cambios/cambusuarios');
-const cambNombres = require('./commands/cambios/cambnombres');
+
+//Comando Cambios
+const { obtenerCambiosUsuario } = require('./commands/cambios/cambios');
+
+
 
 //Sobre la DB
 const { pool } = require('./psql/db');
@@ -33,12 +36,6 @@ const { createKycTable } = require('./KYC/kyctabla');
 
 createKycTable()
   
-//Esto de aqui es para hacer busquedas de cambios de alias y de nombre de un usuario
-const { verificarRepeticionesIDNombres } = require('./psql/dblogic');
-const { verificarRepeticionesIDUsuarios } = require('./psql/dblogic');
-const { buscarCambiosCronologicosNombres } = require('./psql/dblogic');
-const { buscarCambiosCronologicosUsuarios } = require('./psql/dblogic');
-const { listarUsuariosEnListaNegra } = require('./listanegra/listarlistanegra');
 
 // IMPORTACION para el KYC 
 const { kycMenu } = require('./KYC/kycmenu')
@@ -46,7 +43,6 @@ const { mostrarTerminos, aceptoTerminos } = require ('./KYC/kycterminos')
 const { getUserResponses } = require('./KYC/kycrespuestas');
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacion');
 const { lsverificadosCommand } = require('./KYC/listarverificados');
-const { updateAllKyc } = require('./KYC/updatekyc');
 const { updateUsers } = require('./KYC/updateusers');
 
 // Importacion para la Lista Negra
@@ -54,7 +50,7 @@ const { updateUsers } = require('./KYC/updateusers');
 const { cleanGroups } = require('./listanegra/clean');
 
 // Actualizar a BRPlus
-require('./KYC/updateusers');
+
 
 
 
@@ -1518,6 +1514,7 @@ ctx.replyWithHTML(`Para ver nuestras Reglas, da clic <a href="${rules}">aquí</a
 
 /*****************************************************************/
 //Boton y comando Cambios del Menu Para Usuarios
+//****************************************************************/
 bot.action('cambios', (ctx) => {
   const message = `📝 Con el comando /cambios puedes consultar los cambios de alias y/o de nombres que ha tenido un usuario en el pasado. Simplemente escribe /cambios seguido del ID de usuario o del @alias del usuario que quieres consultar. El informe detallado se mostrará cronológicamente y te indicará los cambios que ha tenido tanto en su nombre como en su @alias.
 
@@ -1526,8 +1523,20 @@ Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡
 });
 
 /********************************************************************************** */
-// Manejador de comandos para /cambios
+/////////          Manejador de comandos para /cambios          //////////////////////
 //************************************************************************************/
+bot.command('cambios', async (ctx) => {
+  let id = parseInt(ctx.message.text.split(' ')[1]);
+
+  // Si no se proporciona un número de ID, se usa el ID del usuario que envió el mensaje
+  if (isNaN(id)) {
+    id = ctx.from.id;
+  }
+
+  const reporte = await obtenerCambiosUsuario(id);
+  ctx.replyWithMarkdown(reporte);
+});
+
 
 
 
