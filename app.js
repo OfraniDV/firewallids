@@ -78,7 +78,7 @@ const rules  = process.env.BOT_RULES;
 
 ////    **** LISTA NEGRA ****              ////
 // Listar los usuarios en lista negra
-bot.command('lslistanegra', async (ctx) => {
+/*bot.command('lslistanegra', async (ctx) => {
   try {
     const adminId = ctx.from.id;
     const isAdmin = await pool.query(`SELECT id FROM listanegra_administradores WHERE id = ${adminId}`);
@@ -116,7 +116,7 @@ bot.command('clean', async (ctx) => {
     // Llamamos a la función cleanGroups para realizar la limpieza
     await cleanGroups(ctx);
   }, 1000);
-});
+});*/
 
 
 
@@ -389,7 +389,7 @@ module.exports = {
 //////////////////////////////// Funciones para poder actualizar identidades/////
 // EL COMANDO ///
 /////////////////////////////////////////////////////////////////////////////////
-bot.command('updatekyc', async (ctx) => {
+/*bot.command('updatekyc', async (ctx) => {
   try {
     // Ejecutar las funciones una por una
     await insertUserIdentidades();
@@ -410,7 +410,7 @@ bot.command('updatekyc', async (ctx) => {
     await ctx.reply('Ha ocurrido un error al actualizar los datos de KYC.');
   }
 });
-
+*/
 
 
 
@@ -501,7 +501,7 @@ bot.action('cancelKYC', async (ctx) => {
 ///////////////////////////////////////////////////////////////////////////////////
 
 // Listar Verificados
-bot.command('lsverificados', async (ctx) => {
+/*bot.command('lsverificados', async (ctx) => {
   try {
     const adminId = ctx.from.id;
     const isAdmin = await pool.query(`SELECT id FROM listanegra_administradores WHERE id = ${adminId}`);
@@ -517,7 +517,7 @@ bot.command('lsverificados', async (ctx) => {
     console.error(`Error al ejecutar el comando /lsverificados: ${error}`);
     await ctx.reply('Ocurrió un error al ejecutar el comando');
   }
-});
+});*/
 
 
 
