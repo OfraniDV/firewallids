@@ -420,9 +420,20 @@ module.exports = {
 
 // Actualizar el KYC de la Tabla Firewallids a Identidades para BRPlus funcionando
 bot.command('updateusers', async (ctx) => {
-  await updateUsers();
-  ctx.reply('Los usuarios se han actualizado correctamente.');
+  try {
+    const result = await updateUsers();
+    if (result > 0) {
+      await ctx.reply('✅ Los usuarios han sido actualizados correctamente.');
+    } else {
+      await ctx.reply('👍 No fue necesario actualizar a los usuarios.');
+    }
+  } catch (error) {
+    console.error(error);
+    await ctx.reply('🚫 Ha ocurrido un error al actualizar los usuarios.');
+  }
 });
+
+
 
 
 
