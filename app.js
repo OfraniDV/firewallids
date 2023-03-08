@@ -63,15 +63,6 @@ const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 const ID_GROUP_VERIFY_KYC = process.env.ID_GROUP_VERIFY_KYC;
 const owner = process.env.ID_USER_OWNER;
 
-bot.start((ctx) => {
-  throw new Error('Algo salió mal');
-});
-
-bot.catch((err, ctx) => {
-  console.log(`Ocurrió un error para el usuario ${ctx.from.username}:`, err);
-  ctx.reply('Lo siento, hubo un error en la ejecución de este comando, informa a soporte o  @Odulami.');
-});
-
 
 
 const urlKyc = process.env.URL_KYC;
@@ -544,63 +535,114 @@ bot.action('kycarchivos', async (ctx) => {
   // Obtener información del usuario
   const userId = ctx.from.id;
   const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
-  
+
   // Verificar si el usuario ya ha sido aprobado
   if (user.rows[0] && user.rows[0].approved) {
     return ctx.reply('Lo siento, tus informaciones ya fueron aprobadas. No puedes editar tus informaciones. Si necesitas hacer alguna actualización, por favor contacta con soporte.');
   }
-  
+
+  // Mensaje con instrucciones para enviar los archivos de KYC
   const mensaje = `
-    Para cumplir con los requisitos de KYC, por favor comprima las siguientes fotos en un archivo ZIP o RAR y envíelas a través de este bot:
+    Para cumplir con los requisitos de KYC, por favor siga estas instrucciones:
 
-    1. Documento frontal.
-    2. Documento reverso.
-    3. Selfie sosteniendo una hoja en blanco con su firma, la fecha actual, el nombre del bot y su documento frontal enfocado en frente del papel.
-    4. Foto de una transferencia o depósito en el banco donde se vea el número de la sucursal de su banco y aparezca su nombre igual que en su documento.
+    1. Comprima las siguientes fotos en un archivo ZIP o RAR:
+      - Documento de identidad (ambas caras).
+      - Selfie sosteniendo una hoja en blanco con su firma, la fecha actual, el nombre del bot y su documento de identidad enfocado en frente del papel.
+      - Foto de una transferencia o depósito en el banco donde se vea el número de la sucursal de su banco y aparezca su nombre igual que en su documento.
 
-    Asegúrese de que todas las fotos estén enfocadas y centradas correctamente antes de enviarlas..
+    2. Envíe el archivo comprimido a través de este bot usando el comando /kycarchivos.
 
-    Si tiene algún problema con la carga de archivos, contáctenos en nuestro soporte al cliente.
+    Asegúrese de que todas las fotos estén enfocadas y centradas correctamente antes de enviarlas. Si tiene algún problema con la carga de archivos, contáctenos en nuestro soporte al cliente.
 
     Gracias por su cooperación.`;
 
-  // Enviar mensaje al usuario que ha tocado el botón de acción
-  ctx.telegram.sendMessage(userId, mensaje);
-
-  // Pedir al usuario que envíe el archivo comprimido
-  await ctx.reply('Por favor, envíame el archivo comprimido con tus documentos KYC.');
-
-  // Capturar el archivo enviado
-  bot.on('message', async (ctx) => {
-    if (ctx.message.document) {
-      // Verificar si el usuario ya ha sido aprobado (otra vez por seguridad)
-      const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id=$1', [userId]);
-      if (user.rows[0] && user.rows[0].approved) {
-        return ctx.reply('Lo siento, tus informaciones ya fueron aprobadas. No puedes editar tus informaciones. Si necesitas hacer alguna actualización, por favor contacta con soporte.');
-      }
-
-      const fileId = ctx.message.document.file_id;
-      const file = await bot.telegram.getFile(fileId);
-      const response = await axios.get(
-        `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`,
-        { responseType: 'arraybuffer' }
-      );
-
-      // Guardar el archivo en la base de datos
-      const kycArchivo = response.data;
-      const query = 'UPDATE kycfirewallids SET kycarchivos=$1 WHERE user_id=$2 RETURNING *';
-      const values = [kycArchivo, userId];
-      try {
-        const result = await pool.query(query, values);
-        console.log(result.rows[0]);
-        ctx.reply('Archivo guardado exitosamente.');
-      } catch (error) {
-        console.error(error);
-        ctx.reply('Ocurrió un error al guardar el archivo.');
-      }
-    }
-  });
+  // Enviar el mensaje al usuario
+  await ctx.reply(mensaje);
 });
+
+
+
+
+
+
+
+///   ***** enviar el archivo comprimido *****///////
+bot.command('kycarchivos', async (ctx) => {
+  console.log(`Comando /kycarchivos recibido de ${ctx.from.username} (ID: ${ctx.from.id})`);
+  
+  const userId = ctx.from.id;
+
+  // Consultamos la tabla kycfirewallids para ver si el usuario ya existe
+  const res = await pool.query(`SELECT * FROM kycfirewallids WHERE user_id = ${userId}`);
+  
+  // Si no existe el usuario, lo creamos
+  if (res.rowCount === 0) {
+    await pool.query(`INSERT INTO kycfirewallids (user_id) VALUES (${userId})`);
+    
+    // Enviamos mensaje al usuario solicitando sus archivos
+    ctx.reply('Por favor envía tus fotos en un archivo comprimido en zip o rar');
+    console.log(`Solicitando archivos a ${ctx.from.username} (ID: ${ctx.from.id})`);
+    return;
+  }
+  
+  // Si el KYC del usuario está en proceso, enviamos un mensaje informándole
+  if (res.rows[0].pending === true) {
+    ctx.reply('Tu KYC ya está en análisis, por favor espera.');
+    console.log(`KYC de ${ctx.from.username} (ID: ${ctx.from.id}) ya está en análisis`);
+    return;
+  }
+  
+  // Si el KYC del usuario no está en proceso, le pedimos que envíe sus archivos
+  ctx.reply('Por favor envía tus fotos en un archivo comprimido en zip o rar');
+  console.log(`Solicitando archivos a ${ctx.from.username} (ID: ${ctx.from.id})`);
+});
+
+bot.on('document', async (ctx) => {
+  const userId = ctx.from.id;
+  const file = ctx.message.document;
+
+  // Verificamos que el archivo sea un archivo comprimido en rar o zip
+  const extension = file.file_name.split('.').pop();
+  if (extension !== 'rar' && extension !== 'zip') {
+    ctx.reply('Lo siento, solo se permiten archivos comprimidos en rar o zip.');
+    console.log(`Archivo inválido recibido de ${ctx.from.username} (ID: ${ctx.from.id})`);
+    return;
+  }
+
+  // Descargamos el archivo y lo guardamos en la base de datos
+  const fileLink = await ctx.telegram.getFileLink(file.file_id);
+  const response = await axios.get(fileLink.href, { responseType: 'arraybuffer' });
+  const buffer = Buffer.from(response.data);
+
+  // Convertimos el archivo en un objeto tipo bytea para almacenarlo en la base de datos
+  const fileBytes = new Uint8Array(buffer);
+  const bytea = Buffer.from(fileBytes).toString('base64');
+
+  // Actualizamos la tabla kycfirewallids para almacenar el archivo
+  await pool.query(`UPDATE kycfirewallids SET kycarchivos = decode('${bytea}', 'base64') WHERE user_id = ${userId}`);
+  
+  ctx.reply('¡Gracias por enviar tus archivos! Tu KYC está en proceso de análisis. Te notificaremos cuando esté listo.');
+  console.log(`Archivo recibido de ${ctx.from.username} (ID: ${ctx.from.id}) y guardado en la base de datos.`);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
 //                              ENLACE DE SU CUENTA DE FACEBOOK
 
