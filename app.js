@@ -69,7 +69,7 @@ bot.start((ctx) => {
 
 bot.catch((err, ctx) => {
   console.log(`Ocurrió un error para el usuario ${ctx.from.username}:`, err);
-  ctx.reply('Lo siento, hubo un error en la ejecución de este comando.');
+  ctx.reply('Lo siento, hubo un error en la ejecución de este comando, informa a soporte o  @Odulami.');
 });
 
 
