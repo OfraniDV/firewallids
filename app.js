@@ -1529,44 +1529,6 @@ Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡
 // Manejador de comandos para /cambios
 //************************************************************************************/
 
-// Manejador de comandos para /cambios
-bot.command('cambios', async (ctx) => {
-  // Obtener información del usuario que ejecutó el comando
-  const userId = ctx.message.from.id;
-  let id = userId;
-  let nombreUsuario = ctx.message.from.first_name;
-
-  // Obtener ID si se proporcionó un alias de usuario
-if (ctx.message.text.split(' ').length > 1) {
-  const input = ctx.message.text.split(' ')[1];
-  let user;
-  if (input.startsWith('@')) {
-    const username = input.substring(1);
-    try {
-      user = await ctx.telegram.getChat(username);
-    } catch (error) {
-      console.error(error);
-    }
-  } else {
-    try {
-      user = await ctx.telegram.getChat(input);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-  if (user) {
-    id = user.id;
-    nombreUsuario = user.first_name;
-  }
-}
-
-
-  // Obtener el informe de cambios de usuario y mostrarlo
-  await cambUsuarios(ctx, id, nombreUsuario);
-
-  // Obtener el informe de cambios de nombre y mostrarlo
-  await cambNombres(ctx, id, nombreUsuario);
-});
 
 
 

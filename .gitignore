@@ -4,3 +4,4 @@ node_modules/
 *.log
 ./KYC/kycimg/
 *.jpg
+../psql/db.js
