@@ -855,7 +855,7 @@ bot.action('kyc_edit', async (ctx) => {
 
       ctx.reply("¡Listo! Puedes enviar tus informaciones nuevamente.");
     } else {
-      ctx.reply("Para editar tus informaciones, simplemente envía tus nuevos datos de KYC a través del comando /kyc.");
+      ctx.reply("Para editar tus informaciones, toca el boton en el menu o escribe el comando que corresponde si necesitas ayuda escribe a Soporte.");
     }
   } catch (error) {
     console.error(error);
