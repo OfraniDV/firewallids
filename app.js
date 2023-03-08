@@ -1528,8 +1528,10 @@ Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡
 bot.command('cambios', async (ctx) => {
   let id = parseInt(ctx.message.text.split(' ')[1]);
 
-  // Si no se proporciona un número de ID, se usa el ID del usuario que envió el mensaje
-  if (isNaN(id)) {
+  // Si no se proporciona un número de ID y se está respondiendo a un mensaje, se usa el ID del usuario al que se está respondiendo
+  if (isNaN(id) && ctx.message.reply_to_message) {
+    id = ctx.message.reply_to_message.from.id;
+  } else if (isNaN(id)) { // Si no se proporciona un número de ID y no se está respondiendo a un mensaje, se usa el ID del usuario que envió el mensaje
     id = ctx.from.id;
   }
 
