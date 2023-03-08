@@ -166,3 +166,5 @@ const updateAllKyc = async () => {
 };
 
 updateAllKyc();
+
+module.exports = { updateAllKyc };

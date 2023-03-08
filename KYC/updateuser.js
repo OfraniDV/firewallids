@@ -63,3 +63,4 @@ async function updateUser() {
 
 updateUser();
 
+module.exports = { updateUser };

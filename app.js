@@ -46,6 +46,8 @@ const { mostrarTerminos, aceptoTerminos } = require ('./KYC/kycterminos')
 const { getUserResponses } = require('./KYC/kycrespuestas');
 const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacion');
 const { lsverificadosCommand } = require('./KYC/listarverificados');
+const { updateAllKyc } = require('./KYC/updatekyc');
+const { updateUser } = require('./KYC/updateuser');
 
 // Importacion para la Lista Negra
 // Importamos la función cleanGroups desde el archivo donde la definiste
@@ -76,6 +78,27 @@ const nosotr = process.env.NOSOTROS;
 const rules  = process.env.BOT_RULES;
 
 ////    **** LISTA NEGRA ****              ////
+// Listar los usuarios en lista negra
+bot.command('lslistanegra', async (ctx) => {
+  try {
+    const adminId = ctx.from.id;
+    const isAdmin = await pool.query(`SELECT id FROM listanegra_administradores WHERE id = ${adminId}`);
+    
+    if (isAdmin.rowCount > 0) {
+      // Si el usuario es un administrador, ejecuta el comando listarUsuariosEnListaNegra
+      await ctx.reply('Estamos generando la lista de usuarios en lista negra, esto puede tardar unos momentos. Por favor, ten paciencia.');
+      await listarUsuariosEnListaNegra(ctx);
+    } else {
+      // Si no es un administrador, envía un mensaje de error
+      await ctx.reply('ACCESO DENEGADO\N No tienes permiso para ejecutar este comando');
+    }
+  } catch (error) {
+    console.error(`Error al ejecutar el comando /lslistanegra: ${error}`);
+    await ctx.reply('Ocurrió un error al ejecutar el comando');
+  }
+});
+
+
 // Creamos el comando "/clean" y lo limitamos solo a los administradores de la lista negra
 bot.command('clean', async (ctx) => {
   const admin = await pool.query('SELECT * FROM listanegra_administradores WHERE id = $1', [ctx.from.id]);
@@ -100,7 +123,37 @@ bot.command('clean', async (ctx) => {
 
 
 
+
+
+
+
 // ****************          ****  // KYC //  *****       ************
+// Actualizar el KYC de la Tabla Firewallids a Identidades para BRPlus
+bot.command('updatekyc', async (ctx) => {
+  try {
+    await updateAllKyc();
+    ctx.reply('KYC actualizado correctamente para todos los usuarios');
+  } catch (err) {
+    console.error(`Error al actualizar KYC para todos los usuarios: ${err}`);
+    ctx.reply('Ocurrió un error al actualizar KYC. Por favor, inténtelo de nuevo más tarde');
+  }
+});
+
+// Actualizar el KYC de la Tabla Firewallids a Identidades para BRPlus
+bot.command('updateuser', async (ctx) => {
+  try {
+    await updateUser();
+    ctx.reply('KYC actualizado correctamente para todos los usuarios desde Identidades');
+  } catch (err) {
+    console.error(`Error al actualizar KYC para todos los usuarios: ${err}`);
+    ctx.reply('Ocurrió un error al actualizar KYC. Por favor, inténtelo de nuevo más tarde');
+  }
+});
+
+
+
+
+
 //Botón KYC del Primer menu de COMANDOS PARA USUARIOS
 bot.action('kyc', async (ctx) => {
   // Verifica si el botón se está ejecutando en el chat privado con el bot
@@ -192,25 +245,6 @@ bot.command('lsverificados', async (ctx) => {
   }
 });
 
-// Listar los usuarios en lista negra
-bot.command('lslistanegra', async (ctx) => {
-  try {
-    const adminId = ctx.from.id;
-    const isAdmin = await pool.query(`SELECT id FROM listanegra_administradores WHERE id = ${adminId}`);
-    
-    if (isAdmin.rowCount > 0) {
-      // Si el usuario es un administrador, ejecuta el comando listarUsuariosEnListaNegra
-      await ctx.reply('Estamos generando la lista de usuarios en lista negra, esto puede tardar unos momentos. Por favor, ten paciencia.');
-      await listarUsuariosEnListaNegra(ctx);
-    } else {
-      // Si no es un administrador, envía un mensaje de error
-      await ctx.reply('ACCESO DENEGADO\N No tienes permiso para ejecutar este comando');
-    }
-  } catch (error) {
-    console.error(`Error al ejecutar el comando /lslistanegra: ${error}`);
-    await ctx.reply('Ocurrió un error al ejecutar el comando');
-  }
-});
 
 
 
