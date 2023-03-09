@@ -35,64 +35,6 @@ async function reportar(ctx) {
 }
 
 
-async function resolver(ctx) {
-  const ticket = parseInt(ctx.state.command.args);
-  if (isNaN(ticket)) {
-    await ctx.replyWithMarkdown('Debes proporcionar el número de ticket que deseas resolver. Ejemplo: `/ticket 123`');
-    return;
-  }
-  const client = await pool.connect();
-  try {
-    const result = await client.query('SELECT * FROM reportes WHERE ticket = $1', [ticket]);
-    if (result.rows.length === 0) {
-      await ctx.replyWithMarkdown('El número de ticket que proporcionaste no existe en nuestra base de datos. Verifica el número e intenta nuevamente.');
-      return;
-    }
-    const reporte = result.rows[0];
-    if (reporte.resolver) {
-      await ctx.replyWithMarkdown('Este reporte ya ha sido resuelto anteriormente. Si necesitas hacer alguna modificación, por favor comunícate con los administradores.');
-      return;
-    }
-    await ctx.replyWithMarkdown(`Resolviendo reporte número \`${ticket}\`\n\nMensaje del usuario: \`${escape(reporte.reporte)}\`\n\nPor favor proporciona la solución para este reporte usando el comando /solucion <ticket> <solución>`);
-  } finally {
-    client.release();
-  }
-}
-
-async function solucion(ctx) {
-  const ticket = parseInt(ctx.message.text.split(' ')[1]);
-  if (!ticket) {
-    return ctx.reply('⚠️ Debe proporcionar el número de ticket para resolverlo.');
-  }
-
-  const solucion = ctx.message.text.split(' ').slice(2).join(' ');
-
-  const client = await pool.connect();
-  try {
-    // Actualizar ticket en la base de datos
-    const { rows } = await client.query('UPDATE reportes SET resolver = $1, id_admin_resolvio = $2, solucion = $3 WHERE ticket = $4 RETURNING user_id, reporte', [true, ctx.from.id, solucion, ticket]);
-    const reporte = rows[0].reporte;
-    const userId = rows[0].user_id;
-
-    // Notificar a usuario
-    const mensajeUsuario = `Tu reporte ha sido resuelto. Ticket: ${ticket}\n\n${solucion}`;
-    await ctx.telegram.sendMessage(userId, mensajeUsuario);
-
-    // Notificar a administradores
-    const mensajeAdmins = `🔔 Reporte #${ticket} resuelto\n\nReporte: ${reporte}\n\nSolución: ${solucion}`;
-    const admins = await getAdmins();
-    admins.forEach(async (admin) => {
-      await ctx.telegram.sendMessage(admin.id, mensajeAdmins, { parse_mode: 'Markdown' });
-    });
-
-    return ctx.reply('✅ Ticket resuelto exitosamente.');
-  } catch (err) {
-    console.error(err);
-    return ctx.reply('❌ Ocurrió un error al intentar resolver el ticket.');
-  } finally {
-    client.release();
-  }
-}
 
 
-module.exports = { reportar, solucion, resolver };
+module.exports = { reportar };

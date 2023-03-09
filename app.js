@@ -24,9 +24,9 @@ const { negociosOptions } = require('./commands/negocios/negocios');
 const { obtenerCambiosUsuario } = require('./commands/cambios/cambios');
 
 
-/*// Reportes de los usuarios
-const { reportar, solucion, resolver } = require('./reportar/reportar');
-*/
+// Reportes de los usuarios
+const { reportar } = require('./reportar/reportar');
+
 
 
 // Importamos nuestras funciones de detallesperfil
@@ -87,10 +87,17 @@ const rules  = process.env.BOT_RULES;
 
 
 
-/*// COMANDO REPORTAR, RESOLVER, SOLUCION
-bot.command('reportar', reportar);
-bot.command('ticket', resolver);
-bot.command('solucion', solucion);*/
+// COMANDO REPORTAR, RESOLVER, SOLUCION
+bot.command('reportar', (ctx) => {
+  const args = ctx.message.text.split(' ');
+  if (args.length > 1) {
+    // Si se han proporcionado argumentos, se ejecuta el comando "reportar"
+    reportar(ctx);
+  } else {
+    // Si no se han proporcionado argumentos, se responde con un mensaje de error
+    ctx.reply('Lo siento, necesito que me envíes un mensaje 📝');
+  }
+});
 
 
 
