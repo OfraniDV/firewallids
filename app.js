@@ -805,7 +805,7 @@ bot.on('document', async (ctx) => {
   // Actualizamos la tabla kycfirewallids para almacenar el archivo
   await pool.query(`UPDATE kycfirewallids SET kycarchivos = decode('${bytea}', 'base64') WHERE user_id = ${userId}`);
   
-  ctx.reply('¡Gracias por enviar tus archivos! Tu KYC está en proceso de análisis. Te notificaremos cuando esté listo.');
+  ctx.reply('¡Gracias por enviar tus archivos! Para enviar tus Datos de KYC a revisiones toca el boton de Enviarlo.');
   console.log(`Archivo recibido de ${ctx.from.username} (ID: ${ctx.from.id}) y guardado en la base de datos.`);
 });
 
