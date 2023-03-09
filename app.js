@@ -780,6 +780,11 @@ bot.on('document', async (ctx) => {
   const userId = ctx.from.id;
   const file = ctx.message.document;
 
+  if (!file || !file.file_name) {
+    console.log('El objeto file o su propiedad file_name son nulos o indefinidos');
+    return;
+  }
+
   // Verificamos que el archivo sea un archivo comprimido en rar o zip
   const extension = file.file_name.split('.').pop();
   if (extension !== 'rar' && extension !== 'zip') {

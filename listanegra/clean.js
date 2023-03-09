@@ -42,12 +42,12 @@ async function cleanGroups(ctx) {
         // Expulsamos al usuario del grupo
         await ctx.telegram.kickChatMember(group.chat.id, member.user.id);
 
-        const motivo = blacklistedUser.motivos.find((motivo) => motivo.id === member.user.id)?.motivo || 'Sin motivo especificado';
+        const motivos = blacklistedUser.motivos.map(motivo => `- ${motivo}`).join('\n');
 
         // Enviamos un mensaje al usuario explicando el motivo de la expulsión
         await ctx.telegram.sendMessage(
           member.user.id,
-          `🚫 **¡Atención!** Has sido expulsado del grupo *${group.title}* debido a que te encuentras en la lista negra. Motivo: ${motivo}`,
+          `🚫 **¡Atención!** Has sido expulsado del grupo *${group.title}* debido a que te encuentras en la lista negra. Motivos:\n${motivos}`,
           { parse_mode: 'Markdown' }
         );
 
