@@ -24,9 +24,9 @@ const { negociosOptions } = require('./commands/negocios/negocios');
 const { obtenerCambiosUsuario } = require('./commands/cambios/cambios');
 
 
-// Reportes de los usuarios
+/*// Reportes de los usuarios
 const { reportar, solucion, resolver } = require('./reportar/reportar');
-
+*/
 
 
 // Importamos nuestras funciones de detallesperfil
@@ -87,10 +87,10 @@ const rules  = process.env.BOT_RULES;
 
 
 
-// COMANDO REPORTAR, RESOLVER, SOLUCION
+/*// COMANDO REPORTAR, RESOLVER, SOLUCION
 bot.command('reportar', reportar);
 bot.command('ticket', resolver);
-bot.command('solucion', solucion);
+bot.command('solucion', solucion);*/
 
 
 
