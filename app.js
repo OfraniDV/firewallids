@@ -91,13 +91,40 @@ const rules  = process.env.BOT_RULES;
 
 // COMANDO REPORTAR, TICKET, SOLUCION
 //REPORTAR
-bot.command('reportar', (ctx) => {
+bot.command('reportar', async (ctx) => {
+  const userId = ctx.from.id;
+
+  // Verificar si el usuario está en la tabla kycfirewallids y aprobado
+  const kycQuery = 'SELECT * FROM kycfirewallids WHERE user_id = $1 AND approved = true';
+  const kycResult = await pool.query(kycQuery, [userId]);
+  if (kycResult.rowCount === 0) {
+    // Verificar si el usuario está en la tabla identidades con estado 1
+    const identidadesQuery = 'SELECT * FROM identidades WHERE usuario_id = $1 AND estado = 1';
+    const identidadesResult = await pool.query(identidadesQuery, [userId]);
+    if (identidadesResult.rowCount === 0) {
+      // Verificar si el usuario está en la tabla usuarios con tyc_aceptadas, ctc y verificado en true
+      const usuariosQuery = 'SELECT * FROM usuarios WHERE id = $1 AND tyc_aceptadas = true AND ctc = true AND verificado = true';
+      const usuariosResult = await pool.query(usuariosQuery, [userId]);
+      if (usuariosResult.rowCount === 0) {
+        // Si el usuario no cumple con las restricciones, mostrar un mensaje de error
+        return ctx.reply('Lo siento, este comando solo es permitido para personas verificadas en los bots Reputacion Plus o Firewallids.');
+      }
+    }
+  }
+
+  // Verificar si el usuario ha superado el límite de reportes diarios
+  const date = new Date().toISOString().slice(0, 10);
+  const reportesQuery = 'SELECT COUNT(*) AS count FROM reportes WHERE user_id = $1 AND fecha = $2';
+  const reportesResult = await pool.query(reportesQuery, [userId, date]);
+  if (reportesResult.rows[0].count >= 3) {
+    return ctx.reply('Lo siento, has alcanzado el límite de reportes diarios. Por favor, inténtalo de nuevo mañana.');
+  }
+
+  // Si el usuario cumple con todas las restricciones, ejecutar el comando "reportar"
   const args = ctx.message.text.split(' ');
   if (args.length > 1) {
-    // Si se han proporcionado argumentos, se ejecuta el comando "reportar"
     reportar(ctx);
   } else {
-    // Si no se han proporcionado argumentos, se responde con un mensaje de error
     ctx.reply('Lo siento, necesito que me envíes un mensaje al lado del comando 📝');
   }
 });
