@@ -11,7 +11,7 @@ const emojitriste = '🤯';
 const emojiPeligro = '🚷'; 
 const emojiGroup = '👥';
 
-const signature = '\nEsto es un resumen actualizado para este ID.\nGracias por usar nuestros servicios:\nReputación Plus y Firewallids.';
+const signature = '\nSi necesitas ayuda usa el comando /ayuda\nGracias por usar nuestros servicios:\nReputación Plus y Firewallids.';
 
 async function perfil(ctx) {
   let userID;
