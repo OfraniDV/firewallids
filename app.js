@@ -27,6 +27,7 @@ const { obtenerCambiosUsuario } = require('./commands/cambios/cambios');
 // Reportes de los usuarios
 const { reportar } = require('./reportar/reportar');
 const { mostrarTicket } = require('./reportar/ticket')
+const { resolverTicket } = require('./reportar/resolver');
 
 
 
@@ -103,6 +104,9 @@ bot.command('reportar', (ctx) => {
 
 // TICKET
 bot.command('ticket', mostrarTicket);
+
+// RESOLVER TICKETS
+bot.command('resolverticket', resolverTicket); 
 
 
 
