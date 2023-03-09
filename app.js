@@ -24,6 +24,10 @@ const { negociosOptions } = require('./commands/negocios/negocios');
 const { obtenerCambiosUsuario } = require('./commands/cambios/cambios');
 
 
+// Reportes de los usuarios
+const { reportar, solucion, resolver } = require('./reportar/reportar');
+
+
 
 // Importamos nuestras funciones de detallesperfil
 const { perfil } = require('./detallesperfil/reporte');
@@ -38,6 +42,13 @@ const pTimeout = require('p-timeout');
 const { createKycTable } = require('./KYC/kyctabla');
 
 createKycTable()
+
+//Tabla de reportes
+const { crearTabla } = require('./reportar/tablareporte');
+
+// Crear tabla de reportes en PostgreSQL
+crearTabla();
+
   
 
 // IMPORTACION para el KYC 
@@ -76,13 +87,19 @@ const rules  = process.env.BOT_RULES;
 
 
 
+// COMANDO REPORTAR, RESOLVER, SOLUCION
+bot.command('reportar', reportar);
+bot.command('ticket', resolver);
+bot.command('solucion', solucion);
+
+
+
+
 
 
 //                    **********   COMANDO PERFIL ID     *********           //
 
 bot.command('perfil', perfil);
-
-
 
 
 
