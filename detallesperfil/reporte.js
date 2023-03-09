@@ -37,7 +37,7 @@ async function perfil(ctx) {
   // Obtener información de grupos comunes con el usuario
   const gruposComunes = await checkGruposComunes(userID);
   // Crear mensaje de respuesta
-  let mensaje = `===============================\nEsto es lo que conozco sobre el Perfil de ID: ${userID}\nHasta la fecha de hoy ${new Date().toLocaleDateString()} ${emojiencabezado}\n===============================\n\n`;
+  let mensaje = `===========================\nEsto es lo que conozco sobre el Perfil de ID: ${userID}\nHasta la fecha de hoy ${new Date().toLocaleDateString()} ${emojiencabezado}\n===========================\n\n`;
   if (listasNegras) {
     mensaje += `${emojiPeligro} ¡CUIDADO! Este usuario se encuentra en Lista Negra por el siguiente motivo: ${listasNegras}\n`;
   }
