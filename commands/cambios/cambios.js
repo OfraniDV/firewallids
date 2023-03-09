@@ -1,4 +1,5 @@
 const { pool } = require('../../psql/db');
+const { md, escapeMarkdown } = require('telegram-escape');
 
 function generarReporte(rows, tipoReporte) {
   let reporte = "";
@@ -20,7 +21,7 @@ function generarReporte(rows, tipoReporte) {
     }
 
     prevTime = tiempo;
-    reporte += `${tiempo.padEnd(20)} ${row[tipoReporte].padEnd(30)}\n`;
+    reporte += `${tiempo.padEnd(20)} ${escapeMarkdown(row[tipoReporte]).padEnd(30)}\n`;
     cambios++;
   }
 
