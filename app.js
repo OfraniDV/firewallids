@@ -26,6 +26,7 @@ const { obtenerCambiosUsuario } = require('./commands/cambios/cambios');
 
 // Reportes de los usuarios
 const { reportar } = require('./reportar/reportar');
+const { mostrarTicket } = require('./reportar/ticket')
 
 
 
@@ -87,7 +88,8 @@ const rules  = process.env.BOT_RULES;
 
 
 
-// COMANDO REPORTAR, RESOLVER, SOLUCION
+// COMANDO REPORTAR, TICKET, SOLUCION
+//REPORTAR
 bot.command('reportar', (ctx) => {
   const args = ctx.message.text.split(' ');
   if (args.length > 1) {
@@ -99,6 +101,8 @@ bot.command('reportar', (ctx) => {
   }
 });
 
+// TICKET
+bot.command('ticket', mostrarTicket);
 
 
 

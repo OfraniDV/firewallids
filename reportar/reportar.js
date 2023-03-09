@@ -15,17 +15,19 @@ async function reportar(ctx) {
   const chatType = ctx.chat.type;
   let reporte = ctx.message.text.split(' ').slice(1).join(' ');
 
-  let mensajeReporte = '';
+  // Define el mensaje del reporte sin la información de chat privado o grupo
+  let mensajeReporte = reporte;
+
+  // Define el origen del mensaje (chat privado o grupo)
   let origenMensaje = '';
   if (chatType === 'group' || chatType === 'supergroup') {
-    mensajeReporte = `Reporte de usuario: ${ctx.from.first_name} (${userId})\n\nMensaje enviado desde el grupo "${chatTitle}" (${chatId}):\n${reporte}\n\n`;
     origenMensaje = `Este mensaje fue enviado desde el grupo "${chatTitle}" (${chatId}).`;
   } else if (chatType === 'private') {
-    mensajeReporte = `Reporte de usuario: ${ctx.from.first_name} (${userId})\n\nMensaje enviado desde el chat privado del bot:\n${reporte}\n\n`;
     origenMensaje = `Este mensaje fue enviado desde un chat privado con el bot.`;
   }
 
-  mensajeReporte += origenMensaje;
+  // Define el mensaje completo (reporte + origen del mensaje)
+  let mensajeCompleto = `${mensajeReporte}\n\n${origenMensaje}`;
 
   const client = await pool.connect();
   try {
@@ -35,7 +37,7 @@ async function reportar(ctx) {
     console.log(`Nuevo reporte recibido. El número de ticket es: ${ticket}`);
     await ctx.replyWithMarkdown(`¡Tu reporte se ha enviado a los administradores! Tu número de ticket es: \`${ticket}\` 🎫`);
 
-    const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n📢 *Reporte de usuario* 📢\n👤 Usuario: ${ctx.from.first_name} (${userId})\n\n📩 Mensaje: ${escape(reporte)}\n\n${origenMensaje}`;
+    const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n📢 *Reporte de usuario* 📢\n👤 Usuario: ${ctx.from.first_name} (${userId})\n\n📩 Mensaje: ${escape(mensajeCompleto)}`;
     const adminList = [process.env.ID_GROUP_ADMIN];
     for (let admin of adminList) {
       try {
@@ -52,4 +54,6 @@ async function reportar(ctx) {
   }
 }
 
+
 module.exports = { reportar };
+
