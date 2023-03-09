@@ -18,7 +18,7 @@ async function reportar(ctx) {
     const ticket = res.rows[0].ticket;
     console.log(`Nuevo reporte recibido. El número de ticket es: ${ticket}`);
     await ctx.replyWithMarkdown(`¡Tu reporte se ha enviado a los administradores! Tu número de ticket es: \`${ticket}\` 🎫`);
-    const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n\n📢 *Reporte de usuario* 📢\n\n👤 Usuario: ${ctx.from.first_name} (${userId})\n\n📩 Mensaje: ${escape(mensajeReporte)}\n\n👉 Para resolver este reporte, usa el comando /ticket <ticket>`;
+    const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n\n📢 *Reporte de usuario* 📢\n\n👤 Usuario: ${ctx.from.first_name} (${userId})\n\n📩 Mensaje: ${escape(mensajeReporte)}\n\n`;
     const adminList = [process.env.ID_GROUP_ADMIN];
     for (let admin of adminList) {
       try {
