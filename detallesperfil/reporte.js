@@ -7,6 +7,7 @@ const { checkGruposComunes } = require('./monitorizacion_usuarios_grupos');
 const emojiencabezado = '📩';
 const emojiCheck = '✅';
 const emojiWarning = '😎';
+const emojitriste = '🤯';
 const emojiPeligro = '🚷';
 const emojiGroup = '👥';
 const signature = '\nEste es un resumen actualizado para este ID.\nGracias por usar nuestros servicios:\nReputación Plus y Firewallids.';
@@ -54,7 +55,7 @@ async function perfil(ctx) {
   }
   // Si no se encontró información del usuario en ninguna búsqueda anterior
   if (!listasNegras && !identidad && !firewallids && !administrador && !gruposComunes) {
-    mensaje += `${emojiWarning} No he tenido la oportunidad de ver este usuario anteriormente. Por favor, si puedes agregar este usuario o reenviarnos un mensaje a un grupo donde se encuentre el bot Reputación Plus y Firewallids y vuelve a usar este comando.\n`;
+    mensaje += `${emojitriste} No he tenido la oportunidad de ver este usuario anteriormente. Por favor, si puedes agregar este usuario o reenviarnos un mensaje a un grupo donde se encuentre el bot Reputación Plus y Firewallids y vuelve a usar este comando.\n`;
   }
   mensaje += signature;
   // Enviar mensaje de respuesta
