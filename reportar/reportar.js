@@ -29,15 +29,17 @@ async function reportar(ctx) {
   // Define el mensaje completo (reporte + origen del mensaje)
   let mensajeCompleto = `${mensajeReporte}\n\n${origenMensaje}`;
 
+  const messageLink = `https://t.me/c/${ctx.message.chat.id.toString().substring(4)}/${ctx.message.message_id}`;
+
   const client = await pool.connect();
   try {
-    const res = await client.query('INSERT INTO reportes (ticket, user_id, reporte) VALUES (nextval(\'reportes_ticket_seq\'), $1, $2) RETURNING ticket', [userId, mensajeReporte]);
+    const res = await client.query('INSERT INTO reportes (ticket, user_id, reporte, mensaje_link) VALUES (nextval(\'reportes_ticket_seq\'), $1, $2, $3) RETURNING ticket', [userId, mensajeReporte, messageLink]);
 
     const ticket = res.rows[0].ticket;
     console.log(`Nuevo reporte recibido. El número de ticket es: ${ticket}`);
     await ctx.replyWithMarkdown(`¡Tu reporte se ha enviado a los administradores! Tu número de ticket es: \`${ticket}\` 🎫`);
 
-    const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n📢 *Reporte de usuario* 📢\n👤 Usuario: ${ctx.from.first_name} (${userId})\n\n📩 Mensaje: ${escape(mensajeCompleto)}`;
+    const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n📢 *Reporte de usuario* 📢\n👤 Usuario: ${ctx.from.first_name} (${userId})\n\n📩 Mensaje: ${escape(mensajeCompleto)}\n\n🔗 Enlace al mensaje: ${messageLink}`;
     const adminList = [process.env.ID_GROUP_ADMIN];
     for (let admin of adminList) {
       try {
@@ -53,7 +55,6 @@ async function reportar(ctx) {
     client.release();
   }
 }
-
 
 module.exports = { reportar };
 

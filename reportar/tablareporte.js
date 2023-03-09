@@ -12,7 +12,8 @@ async function crearTabla() {
       fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       resolver BOOLEAN DEFAULT false,
       id_admin_resolvio BIGINT DEFAULT NULL,
-      solucion TEXT DEFAULT NULL
+      solucion TEXT DEFAULT NULL,
+      mensaje_link TEXT DEFAULT NULL
     );
     
     CREATE SEQUENCE IF NOT EXISTS reportes_ticket_seq;
@@ -24,4 +25,17 @@ async function crearTabla() {
   }
 }
 
-module.exports = { crearTabla };
+async function actualizarMensajeLink(ticket, mensajeLink) {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      UPDATE reportes SET mensaje_link = $2 WHERE ticket = $1;
+    `, [ticket, mensajeLink]);
+    console.log(`Enlace al mensaje reportado actualizado para el ticket ${ticket}`);
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { crearTabla, actualizarMensajeLink };
+
