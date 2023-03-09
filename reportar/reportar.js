@@ -20,26 +20,27 @@ async function reportar(ctx) {
 
   // Define el origen del mensaje (chat privado o grupo)
   let origenMensaje = '';
+  let groupInviteLink = '';
   if (chatType === 'group' || chatType === 'supergroup') {
     origenMensaje = `Este mensaje fue enviado desde el grupo "${chatTitle}" (${chatId}).`;
+    const chatInviteLink = await ctx.telegram.exportChatInviteLink(chatId);
+    groupInviteLink = `Enlace de invitación al grupo: ${chatInviteLink}`;
   } else if (chatType === 'private') {
     origenMensaje = `Este mensaje fue enviado desde un chat privado con el bot.`;
   }
 
   // Define el mensaje completo (reporte + origen del mensaje)
-  let mensajeCompleto = `${mensajeReporte}\n\n${origenMensaje}`;
-
-  const messageLink = `https://t.me/c/${ctx.message.chat.id.toString().substring(4)}/${ctx.message.message_id}`;
+  let mensajeCompleto = `${mensajeReporte}\n\n${origenMensaje}\n\n${groupInviteLink}`;
 
   const client = await pool.connect();
   try {
-    const res = await client.query('INSERT INTO reportes (ticket, user_id, reporte, mensaje_link) VALUES (nextval(\'reportes_ticket_seq\'), $1, $2, $3) RETURNING ticket', [userId, mensajeReporte, messageLink]);
+    const res = await client.query('INSERT INTO reportes (ticket, user_id, reporte, mensaje_link) VALUES (nextval(\'reportes_ticket_seq\'), $1, $2, $3) RETURNING ticket', [userId, mensajeReporte, mensajeCompleto]);
 
     const ticket = res.rows[0].ticket;
     console.log(`Nuevo reporte recibido. El número de ticket es: ${ticket}`);
     await ctx.replyWithMarkdown(`¡Tu reporte se ha enviado a los administradores! Tu número de ticket es: \`${ticket}\` 🎫`);
 
-    const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n📢 *Reporte de usuario* 📢\n👤 Usuario: ${ctx.from.first_name} (${userId})\n\n📩 Mensaje: ${escape(mensajeCompleto)}\n\n🔗 Enlace al mensaje: ${messageLink}`;
+    const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n📢 *Reporte de usuario* 📢\n👤 Usuario: ${ctx.from.first_name} (${userId})\n\n📩 Mensaje: ${escape(mensajeCompleto)}`;
     const adminList = [process.env.ID_GROUP_ADMIN];
     for (let admin of adminList) {
       try {
@@ -57,4 +58,3 @@ async function reportar(ctx) {
 }
 
 module.exports = { reportar };
-
