@@ -11,7 +11,7 @@ async function checkGruposComunes(userID) {
 
     // Si el usuario aparece en la tabla, devolver mensaje
     if (count > 0) {
-      return `Este usuario ID se encuentra en un total de ${count} grupos en común con nosotros ${emoji}`;
+      return `A este usuario ID lo he visto en un total de ${count} grupos en común con nosotros ${emoji}`;
     } else {
       return null;
     }
