@@ -103,11 +103,39 @@ bot.command('reportar', (ctx) => {
 });
 
 // TICKET
-bot.command('ticket', mostrarTicket);
+bot.command('ticket', async (ctx) => {
+  const idAdmin = ctx.from.id;
+  const client = await pool.connect();
+  try {
+    const res = await client.query('SELECT * FROM listanegra_administradores WHERE id = $1', [idAdmin]);
+
+    if (res.rowCount === 0) {
+      return await ctx.reply(`🚫 Acceso denegado. Este comando es solo para los administradores del Bot ReputacionPlus y Firewallids. 🚫\n\nSi crees que esto es un error, por favor contacta con el equipo de soporte.`);
+    }
+
+    await mostrarTicket(ctx);
+  } catch (err) {
+    console.log(err.stack);
+  } finally {
+    client.release();
+  }
+});
+
+
+
 
 // RESOLVER TICKETS
-bot.command('resolverticket', resolverTicket); 
+bot.command('resolverticket', async (ctx) => {
+  const userId = ctx.from.id;
+  const adminList = await pool.query('SELECT id FROM listanegra_administradores');
+  const isAdmin = adminList.rows.some((admin) => admin.id === userId);
 
+  if (!isAdmin) {
+    return await ctx.reply('🚫 Acceso denegado. Este comando es solo para los administradores del Bot ReputacionPlus y Firewallids. 🚫');
+  }
+
+  // resto del código para resolver un ticket
+});
 
 
 
