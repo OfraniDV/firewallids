@@ -25,6 +25,11 @@ const { obtenerCambiosUsuario } = require('./commands/cambios/cambios');
 
 
 
+// Importamos nuestras funciones de detallesperfil
+const { perfil } = require('./detallesperfil/reporte');
+
+
+
 //Sobre la DB
 const { pool } = require('./psql/db');
 const pTimeout = require('p-timeout');
@@ -68,6 +73,19 @@ const canalD = process.env.ID_CHANNEL_REPORTS;
 const gRecom = process.env.ID_GROUP_RECOMEND;
 const nosotr = process.env.NOSOTROS;
 const rules  = process.env.BOT_RULES;
+
+
+
+
+
+//                    **********   COMANDO PERFIL ID     *********           //
+
+bot.command('perfil', perfil);
+
+
+
+
+
 
 ////    **** LISTA NEGRA ****              ////
 // Listar los usuarios en lista negra

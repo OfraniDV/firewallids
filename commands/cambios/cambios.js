@@ -53,13 +53,13 @@ async function obtenerCambiosUsuario(id) {
   if (usuarioRows.length > 0) {
     reporte += `👤 Estos son los cambios de usuarios del ID ${id}:\n`;
     reporte += "Fecha".padEnd(20) + "Usuario".padEnd(30) + "\n";
-    reporte += "==============================================\n";
+    reporte += "===============================\n";
     reporte += generarReporte(usuarioRows, "usuario");
   }
   if (nombreRows.length > 0) {
     reporte += `\n\n📝 Estos son los cambios de nombres del ID ${id}:\n`;
     reporte += "Fecha".padEnd(20) + "Nombre".padEnd(30) + "\n";
-    reporte += "==============================================\n";
+    reporte += "===============================\n";
     reporte += generarReporte(nombreRows, "nombres");
   }
 
