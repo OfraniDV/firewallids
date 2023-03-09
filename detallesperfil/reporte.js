@@ -4,11 +4,12 @@ const { checkAdministrador } = require('./listanegra_administradores');
 const { checkListanegra } = require('./listanegra');
 const { checkGruposComunes } = require('./monitorizacion_usuarios_grupos');
 
+const emojiencabezado = '📩';
 const emojiCheck = '✅';
 const emojiWarning = '😎';
 const emojiPeligro = '🚷';
 const emojiGroup = '👥';
-const signature = '\nEste es un resumen del ID. Gracias por usar nuestros bots: Reputación Plus y Firewallids.';
+const signature = '\nEste es un resumen actualizado para este ID.\nGracias por usar nuestros servicios:\nReputación Plus y Firewallids.';
 
 async function perfil(ctx) {
   let userID;
@@ -35,7 +36,7 @@ async function perfil(ctx) {
   // Obtener información de grupos comunes con el usuario
   const gruposComunes = await checkGruposComunes(userID);
   // Crear mensaje de respuesta
-  let mensaje = `\n\nEsto es lo que conozco sobre el Perfil de ID: ${userID} \nHasta la fecha de hoy ${new Date().toLocaleDateString()} ${emojiCheck}\n\n`;
+  let mensaje = `===============================\nEsto es lo que conozco sobre el Perfil de ID: ${userID}\nHasta la fecha de hoy ${new Date().toLocaleDateString()} ${emojiencabezado}\n===============================\n\n`;
   if (listasNegras) {
     mensaje += `${emojiPeligro} ¡CUIDADO! Este usuario se encuentra en Lista Negra por el siguiente motivo: ${listasNegras}\n`;
   }
