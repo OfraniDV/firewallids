@@ -18,11 +18,29 @@ async function reportar(ctx) {
   // Define el origen del mensaje (chat privado o grupo)
   let origenMensaje = '';
   let groupInviteLink = '';
-  if (chatType === 'group' || chatType === 'supergroup') {
+
+  if (ctx.message.reply_to_message) {
+    // Si se está respondiendo a un mensaje, se toma ese mensaje como origen del reporte
+    const replyMessage = ctx.message.reply_to_message;
+    const replyChatId = replyMessage.chat.id;
+    const replyMessageId = replyMessage.message_id;
+
+    origenMensaje = `Este mensaje fue reportado en respuesta al mensaje ${replyMessageId} en el chat ${replyChatId}.`;
+    groupInviteLink = `Enlace al mensaje: https://t.me/c/${replyChatId.toString().substr(4)}/${replyMessageId}`;
+  } else if (chatType === 'group' || chatType === 'supergroup') {
+    // Si no se está respondiendo a un mensaje y se está en un grupo, se toma el grupo como origen del reporte
     origenMensaje = `Este mensaje fue enviado desde el grupo "${chatTitle}" (${chatId}).`;
+
+    // Obtener enlace de invitación del chat
     const chatInviteLink = await ctx.telegram.exportChatInviteLink(chatId);
-    groupInviteLink = `Enlace de invitación al grupo: ${chatInviteLink}`;
+
+    // Obtener ID del mensaje actual
+    const messageId = ctx.message.message_id;
+
+    // Concatenar el enlace de invitación del chat y el ID del mensaje para crear un enlace directo al mensaje
+    groupInviteLink = `Enlace al mensaje: ${chatInviteLink}/${messageId}`;
   } else if (chatType === 'private') {
+    // Si no se está respondiendo a un mensaje y se está en un chat privado, se toma el chat privado como origen del reporte
     origenMensaje = `Este mensaje fue enviado desde un chat privado con el bot.`;
   }
 
@@ -53,6 +71,5 @@ async function reportar(ctx) {
     client.release();
   }
 }
-
 
 module.exports = { reportar };
