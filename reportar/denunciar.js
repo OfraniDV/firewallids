@@ -2,7 +2,6 @@ require('dotenv').config();
 const { Telegraf, TelegramError } = require('telegraf');
 const { pool } = require('../psql/db');
 const { escape } = require('lodash');
-
 //Conexion del BOT Variables de Entorno
 const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 
@@ -19,23 +18,18 @@ async function denunciar(ctx) {
   // Define el origen del mensaje (chat privado o grupo)
   let origenMensaje = '';
   let groupInviteLink = '';
-
-  if (ctx.message.reply_to_message) {
-    // Si se está respondiendo a un mensaje, se toma ese mensaje como origen del reporte
-    const replyMessage = ctx.message.reply_to_message;
-    const replyChatId = replyMessage.chat.id;
-    const replyMessageId = replyMessage.message_id;
-
-    origenMensaje = `Este mensaje fue reportado en respuesta al mensaje ${replyMessageId} en el chat ${replyChatId}.`;
-    groupInviteLink = `Enlace al chat: ${await ctx.telegram.exportChatInviteLink(replyChatId)}`;
-  } else if (chatType === 'group' || chatType === 'supergroup') {
-    // Si no se está respondiendo a un mensaje y se está en un grupo, se toma el grupo como origen del reporte
+  if (chatType === 'group' || chatType === 'supergroup') {
     origenMensaje = `Este mensaje fue enviado desde el grupo "${chatTitle}" (${chatId}).`;
-
+    
     // Obtener enlace de invitación del chat
-    groupInviteLink = `Enlace al chat: ${await ctx.telegram.exportChatInviteLink(chatId)}`;
+    const chatInviteLink = await ctx.telegram.exportChatInviteLink(chatId);
+
+    // Obtener ID del mensaje actual o del mensaje que se está respondiendo
+    const messageId = ctx.message.reply_to_message ? ctx.message.reply_to_message.message_id : ctx.message.message_id;
+
+    // Concatenar el enlace de invitación del chat y el ID del mensaje para crear un enlace directo al mensaje
+    groupInviteLink = `Enlace de invitación al mensaje: ${chatInviteLink}/${messageId}`;
   } else if (chatType === 'private') {
-    // Si no se está respondiendo a un mensaje y se está en un chat privado, se toma el chat privado como origen del reporte
     origenMensaje = `Este mensaje fue enviado desde un chat privado con el bot.`;
   }
 
