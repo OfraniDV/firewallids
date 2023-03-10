@@ -3,6 +3,7 @@ const { checkFirewallids } = require('./kycfirewallids');
 const { checkAdministrador } = require('./listanegra_administradores'); 
 const { checkListanegra } = require('./listanegra'); 
 const { checkGruposComunes } = require('./monitorizacion_usuarios_grupos');
+const { findIdByAlias } = require('../commands/alias');
 
 const emojiencabezado = '📩'; 
 const emojiCheck = '✅'; 
@@ -12,6 +13,7 @@ const emojiPeligro = '🚷';
 const emojiGroup = '👥';
 
 const signature = '\nSi necesitas ayuda usa el comando /ayuda\nGracias por usar nuestros servicios:\nReputación Plus y Firewallids.';
+
 
 async function perfil(ctx) {
   let userID;
@@ -23,10 +25,17 @@ async function perfil(ctx) {
   if (ctx.message.text.split(' ')[1]) {
     userID = ctx.message.text.split(' ')[1];
   }
-  // Si no se ha proporcionado un ID válido, usar el ID del usuario que envía el mensaje
-  if (!userID || isNaN(parseInt(userID))) {
-    userID = ctx.from.id;
+  // Si el usuario proporciona un alias, buscar su ID
+  if (ctx.message.text.split(' ')[1]?.startsWith('@')) {
+    const alias = ctx.message.text.split(' ')[1].substring(1);
+    userID = await findIdByAlias(alias);
+    if (!userID) {
+      ctx.reply(`No se pudo encontrar el ID para el alias "@${alias}". Por favor, asegúrate de que el alias es válido.`);
+      return;
+    }
   }
+
+
   // Obtener información de identidad del usuario
   const identidad = await checkIdentidad(userID);
   // Obtener información de KYC Firewallids del usuario

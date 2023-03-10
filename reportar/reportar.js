@@ -1,10 +1,7 @@
 require('dotenv').config();
-
 const { Telegraf, TelegramError } = require('telegraf');
-
 const { pool } = require('../psql/db');
 const { escape } = require('lodash');
-
 //Conexion del BOT Variables de Entorno
 const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 
@@ -56,5 +53,6 @@ async function reportar(ctx) {
     client.release();
   }
 }
+
 
 module.exports = { reportar };
