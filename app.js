@@ -94,25 +94,14 @@ const rules  = process.env.BOT_RULES;
 
 // COMANDO REPORTAR, TICKET, SOLUCION
 //REPORTAR
-bot.command('reportar', async (ctx) => {
-  const userId = ctx.from.id;
-
-  // Verificar si el usuario está en la tabla kycfirewallids y aprobado
-  const kycQuery = 'SELECT * FROM kycfirewallids WHERE user_id = $1 AND approved = true';
-  const kycResult = await pool.query(kycQuery, [userId]);
-  if (kycResult.rowCount === 0) {
-    // Verificar si el usuario está en la tabla identidades con estado 1
-    const identidadesQuery = 'SELECT * FROM identidades WHERE usuario_id = $1 AND estado = 1';
-    const identidadesResult = await pool.query(identidadesQuery, [userId]);
-    if (identidadesResult.rowCount === 0) {
-      // Verificar si el usuario está en la tabla usuarios con tyc_aceptadas, ctc y verificado en true
-      const usuariosQuery = 'SELECT * FROM usuarios WHERE id = $1 AND tyc_aceptadas = true AND ctc = true AND verificado = true';
-      const usuariosResult = await pool.query(usuariosQuery, [userId]);
-      if (usuariosResult.rowCount === 0) {
-        // Si el usuario no cumple con las restricciones, mostrar un mensaje de error
-        return ctx.reply('Lo siento, este comando solo es permitido para personas verificadas en los bots Reputacion Plus o Firewallids.');
-      }
-    }
+bot.command('denunciar', async (ctx) => {
+  // Verificar si se proporcionó un texto después del comando
+  const mensaje = ctx.message.text;
+  if (!mensaje.split(' ')[1]) {
+    // Si no se proporcionó un texto, enviar un mensaje de advertencia
+    const alerta = '⚠️ ¡ALERTA! ⚠️\n\nDebes proporcionar el motivo de tu denuncia junto con el comando. Por ejemplo:\n\n/denunciar Acabo de presenciar un robo en la calle principal.';
+    await ctx.reply(alerta);
+    return;
   }
 
   // Verificar si el usuario ha superado el límite de reportes diarios
