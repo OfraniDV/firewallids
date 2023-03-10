@@ -1,8 +1,8 @@
 require('dotenv').config();
-const { Telegraf, TelegramError } = require('telegraf');
+const { Telegraf } = require('telegraf');
 const { pool } = require('../psql/db');
 const { escape } = require('lodash');
-//Conexion del BOT Variables de Entorno
+
 const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 
 async function denunciar(ctx) {
@@ -20,7 +20,7 @@ async function denunciar(ctx) {
   let groupInviteLink = '';
   if (chatType === 'group' || chatType === 'supergroup') {
     origenMensaje = `Este mensaje fue enviado desde el grupo "${chatTitle}" (${chatId}).`;
-    
+
     // Obtener enlace de invitación del chat
     const chatInviteLink = await ctx.telegram.exportChatInviteLink(chatId);
 
