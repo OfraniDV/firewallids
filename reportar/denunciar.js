@@ -2,10 +2,11 @@ require('dotenv').config();
 const { Telegraf, TelegramError } = require('telegraf');
 const { pool } = require('../psql/db');
 const { escape } = require('lodash');
+
 //Conexion del BOT Variables de Entorno
 const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
 
-async function reportar(ctx) {
+async function denunciar(ctx) {
   const userId = ctx.from.id;
   const chatId = ctx.chat.id;
   const chatTitle = ctx.chat.title;
@@ -26,19 +27,13 @@ async function reportar(ctx) {
     const replyMessageId = replyMessage.message_id;
 
     origenMensaje = `Este mensaje fue reportado en respuesta al mensaje ${replyMessageId} en el chat ${replyChatId}.`;
-    groupInviteLink = `Enlace al mensaje: https://t.me/c/${replyChatId.toString().substr(4)}/${replyMessageId}`;
+    groupInviteLink = `Enlace al chat: ${await ctx.telegram.exportChatInviteLink(replyChatId)}`;
   } else if (chatType === 'group' || chatType === 'supergroup') {
     // Si no se está respondiendo a un mensaje y se está en un grupo, se toma el grupo como origen del reporte
     origenMensaje = `Este mensaje fue enviado desde el grupo "${chatTitle}" (${chatId}).`;
 
     // Obtener enlace de invitación del chat
-    const chatInviteLink = await ctx.telegram.exportChatInviteLink(chatId);
-
-    // Obtener ID del mensaje actual
-    const messageId = ctx.message.message_id;
-
-    // Concatenar el enlace de invitación del chat y el ID del mensaje para crear un enlace directo al mensaje
-    groupInviteLink = `Enlace al mensaje: ${chatInviteLink}/${messageId}`;
+    groupInviteLink = `Enlace al chat: ${await ctx.telegram.exportChatInviteLink(chatId)}`;
   } else if (chatType === 'private') {
     // Si no se está respondiendo a un mensaje y se está en un chat privado, se toma el chat privado como origen del reporte
     origenMensaje = `Este mensaje fue enviado desde un chat privado con el bot.`;
@@ -72,4 +67,4 @@ async function reportar(ctx) {
   }
 }
 
-module.exports = { reportar };
+module.exports = { denunciar };

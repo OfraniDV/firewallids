@@ -28,7 +28,7 @@ const { obtenerCambiosUsuario } = require('./commands/cambios/cambios');
 
 
 // Reportes de los usuarios
-const { reportar } = require('./reportar/reportar');
+const { denunciar } = require('./reportar/denunciar');
 const { mostrarTicket } = require('./reportar/ticket')
 const { resolverTicket } = require('./reportar/resolver');
 
@@ -105,7 +105,7 @@ bot.command('denunciar', async (ctx) => {
   }
   
   try {
-    await reportar(ctx);
+    await denunciar (ctx);
   } catch (err) {
     console.log(err);
     await ctx.reply('Ha ocurrido un error al procesar tu denuncia. Por favor, intenta de nuevo más tarde o contacta con el equipo de soporte.');
