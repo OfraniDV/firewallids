@@ -99,33 +99,16 @@ bot.command('denunciar', async (ctx) => {
   
   if (!mensaje.split(' ')[1]) {
     // Si no se proporcionó un texto, enviar un mensaje de advertencia
-    const alerta = '⚠️ ¡ALERTA! ⚠️\n\nDebes proporcionar el motivo de tu denuncia junto con el comando. Por ejemplo:\n\n/denunciar Acabo de ser victima del usuario tal o este usuario me envia spam al pv\n\nPuedes usar este comando en mi privado si prefieres.';
+    const alerta = '⚠️ ¡ALERTA! ⚠️\n\nDebes proporcionar el motivo de tu denuncia junto con el comando. Por ejemplo:\n\n/denunciar Acabo de ser víctima del usuario tal o este usuario me envía spam al privado.\n\nPuedes usar este comando en mi privado si prefieres.';
     await ctx.reply(alerta);
     return;
   }
   
-  const resultado = await reportar(ctx);
-
-  if (typeof resultado === 'string') {
-    // Si se devuelve un string, significa que hubo un error al ejecutar la función reportar
-    await ctx.reply(resultado);
-    return;
-  }
-
-  // Verificar si el usuario ha superado el límite de reportes diarios
-  const date = new Date().toISOString().slice(0, 10);
-  const reportesQuery = 'SELECT COUNT(*) AS count FROM reportes WHERE user_id = $1 AND fecha = $2';
-  const reportesResult = await pool.query(reportesQuery, [userId, date]);
-  if (reportesResult.rows[0].count >= 3) {
-    return ctx.reply('Lo siento, has alcanzado el límite de reportes diarios. Por favor, inténtalo de nuevo mañana.');
-  }
-
-  // Si el usuario cumple con todas las restricciones, ejecutar el comando "reportar"
-  const args = ctx.message.text.split(' ');
-  if (args.length > 1) {
-    reportar(ctx);
-  } else {
-    ctx.reply('Lo siento, necesito que me envíes un mensaje al lado del comando 📝');
+  try {
+    await reportar(ctx);
+  } catch (err) {
+    console.log(err);
+    await ctx.reply('Ha ocurrido un error al procesar tu denuncia. Por favor, intenta de nuevo más tarde o contacta con el equipo de soporte.');
   }
 });
 
