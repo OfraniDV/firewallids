@@ -95,12 +95,20 @@ const rules  = process.env.BOT_RULES;
 // COMANDO REPORTAR, TICKET, SOLUCION
 //REPORTAR
 bot.command('denunciar', async (ctx) => {
-  // Verificar si se proporcionó un texto después del comando
   const mensaje = ctx.message.text;
+  
   if (!mensaje.split(' ')[1]) {
     // Si no se proporcionó un texto, enviar un mensaje de advertencia
     const alerta = '⚠️ ¡ALERTA! ⚠️\n\nDebes proporcionar el motivo de tu denuncia junto con el comando. Por ejemplo:\n\n/denunciar Acabo de presenciar un robo en la calle principal.';
     await ctx.reply(alerta);
+    return;
+  }
+  
+  const resultado = await reportar(ctx);
+
+  if (typeof resultado === 'string') {
+    // Si se devuelve un string, significa que hubo un error al ejecutar la función reportar
+    await ctx.reply(resultado);
     return;
   }
 
