@@ -99,7 +99,7 @@ bot.command('denunciar', async (ctx) => {
   
   if (!mensaje.split(' ')[1]) {
     // Si no se proporcionó un texto, enviar un mensaje de advertencia
-    const alerta = '⚠️ ¡ALERTA! ⚠️\n\nDebes proporcionar el motivo de tu denuncia junto con el comando. Por ejemplo:\n\n/denunciar Acabo de presenciar un robo en la calle principal.';
+    const alerta = '⚠️ ¡ALERTA! ⚠️\n\nDebes proporcionar el motivo de tu denuncia junto con el comando. Por ejemplo:\n\n/denunciar Acabo de ser victima del usuario tal o este usuario me envia spam al pv\n\nPuedes usar este comando en mi privado si prefieres.';
     await ctx.reply(alerta);
     return;
   }
