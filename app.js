@@ -13,6 +13,9 @@ const path = require('path');
 
 const { md, escapeMarkdown } = require('telegram-escape')
 
+// BUSCAR A PARTIR DE UN @ALIAS
+const { findIdByAlias } = require('./commands/alias');
+
 // Importar comandos
 const { menuOptions } = require('./commands/menu');
 const { comandosOptions } = require('./commands/comandos/comandos');
@@ -1396,6 +1399,12 @@ Si tienes dudas, puedes consultar la sección de ayuda en el menú principal. ¡
 //************************************************************************************/
 bot.command('cambios', async (ctx) => {
   let id = parseInt(ctx.message.text.split(' ')[1]);
+
+  // Si se proporciona un @alias, busca el ID correspondiente
+  if (ctx.message.text.includes('@')) {
+    const alias = ctx.message.text.split(' ')[1].replace('@', '');
+    id = await findIdByAlias(alias);
+  }
 
   // Si no se proporciona un número de ID y se está respondiendo a un mensaje, se usa el ID del usuario al que se está respondiendo
   if (isNaN(id) && ctx.message.reply_to_message) {
