@@ -873,127 +873,85 @@ bot.command('facebook', async (ctx) => {
 
 
 //                                ***  Enviar a Revisiones ***
+
 bot.action('enviarRevisiones', async (ctx) => {
-  try {
-    const userId = ctx.from.id;
-    const query = `
-      SELECT name, identity_number, phone_number, email, address, municipality, province, kycarchivos, facebook, approved
-      FROM kycfirewallids
-      WHERE user_id = ${userId.toString()}
-    `;
-    const result = await pool.query(query);
-    const user = result.rows[0];
+  const userId = ctx.from.id;
+  const userQuery = `SELECT name, identity_number, phone_number, email, address, municipality, province, kycarchivos, facebook, approved FROM kycfirewallids WHERE user_id = ${ctx.from.id}`;
+  const userResult = await pool.query(userQuery);
+  const user = userResult.rows[0];
 
-    if (!user) {
-      ctx.reply(`Lo siento, no se encontró información de KYC para su usuario. Por favor, envíe su información de KYC a través del comando /kyc.`);
-      return;
-    }
-
-    // Comprobar si el usuario ya ha sido aprobado
-    if (user.approved) {
-      ctx.reply('Tu KYC ya ha sido revisado y aprobado. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
-      return;
-    }
-    // Comprobar si se han enviado todos los campos importantes
-    const name = user.name || 'Falta esta información';
-    const identity_number = user.identity_number || 'Falta esta información';
-    const phone_number = user.phone_number || 'Falta esta información';
-    const email = user.email || 'Falta esta información';
-    const address = user.address || 'Falta esta información';
-    const municipality = user.municipality || 'Falta esta información';
-    const province = user.province || 'Falta esta información';
-    const kycarchivos = user.kycarchivos;
-    const facebook = user.facebook || '';
-
-    // Comprobar si falta alguna información importante
-    const hasAllInfo = name !== 'Falta esta información'
-      && identity_number !== 'Falta esta información'
-      && phone_number !== 'Falta esta información'
-      && email !== 'Falta esta información'
-      && address !== 'Falta esta información'
-      && municipality !== 'Falta esta información'
-      && province !== 'Falta esta información';
-
-    // Mostrar mensaje si falta alguna información importante
-    if (!hasAllInfo) {
-      let missingInfoMessage = 'Lo siento, falta la siguiente información en su KYC:\n\n';
-      if (name === 'Falta esta información') {
-        missingInfoMessage += '- Nombre\n';
-      }
-      if (identity_number === 'Falta esta información') {
-        missingInfoMessage += '- Número de identidad\n';
-      }
-      if (phone_number === 'Falta esta información') {
-        missingInfoMessage += '- Número de teléfono\n';
-      }
-      if (email === 'Falta esta información') {
-        missingInfoMessage += '- Correo electrónico\n';
-      }
-      if (address === 'Falta esta información') {
-        missingInfoMessage += '- Dirección\n';
-      }
-      if (municipality === 'Falta esta información') {
-        missingInfoMessage += '- Municipio\n';
-      }
-      if (province === 'Falta esta información') {
-        missingInfoMessage += '- Provincia\n';
-      }
-      ctx.reply(missingInfoMessage);
-      return;
-    }
-
-    // Convertir kycarchivos de bytea a archivo real legible para humanos
-const kycBuffer = Buffer.from(kycarchivos, 'binary');
-const kycFileName = `kyc-${userId}.zip`;
-fs.writeFileSync(kycFileName, kycBuffer);
-    // Crear un reporte con la información obtenida y enviarlo al usuario en su chat privado si se han enviado todos los campos, de lo contrario, mostrar un mensaje
-if (hasAllInfo) {
-  const reportMsg = `📝 *Solicitud de verificación de KYC*\n\n` +
-    `Fecha: ${new Date().toLocaleString('es-CU', { timeZone: 'America/Havana' })}\n\n` +
-    `El usuario de alias @${ctx.from.username} y ID ${ctx.from.id} solicita que se revise su KYC:\n\n` +
-    `Nombre: ${name}\n` +
-    `Número de identidad: ${identity_number}\n` +
-    `Número de teléfono: ${phone_number}\n` +
-    `Correo electrónico: ${email}\n` +
-    `Dirección: ${address}\n` +
-    `Municipio: ${municipality}\n` +
-    `Provincia: ${province}\n` +
-    `Facebook: ${facebook}\n`;
-
-  const reportMsgSent = await ctx.telegram.sendMessage(ctx.from.id, `¿La siguiente información es correcta?\n\n${reportMsg}`, {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: 'Sí, todo correcto',
-            callback_data: 'kyc_approval'
-          },
-          {
-            text: 'No, necesito editar',
-            callback_data: 'kyc_edit'
-          }
-        ]
-      ]
-    }
-  });
-
-  // Enviar el archivo KYC comprimido junto con un mensaje
-  const kycFileSent = await ctx.telegram.sendDocument(ctx.from.id, { source: kycFileName }, { caption: 'Aquí está su KYC.' });
-
-  // Eliminar los archivos generados del disco
-  fs.unlinkSync(kycFileName);
-} else {
-  ctx.reply('Para enviar su informe al departamento del KYC, debe completar todos los campos de información solicitados. Por favor, revise y complete la información que falta.');
-}
-} catch (error) {
-  console.error(error);
-  ctx.reply(`Lo siento, ha ocurrido un error al obtener la información de KYC.`);
+  if (!user) {
+    return ctx.reply(`Lo siento, no se encontró información de KYC para su usuario. Por favor, envíe su información de KYC a través del comando /kyc.`);
   }
-  })
+
+  if (user.approved) {
+    return ctx.reply('Tu KYC ya ha sido revisado y aprobado. Si necesitas hacer algún cambio, ponte en contacto con el soporte.');
+  }
+
+  const requiredFields = [
+    'name',
+    'identity_number',
+    'phone_number',
+    'email',
+    'address',
+    'municipality',
+    'province',
+    'facebook',
+    'kycarchivos'
+  ];
+
+  const missingFields = requiredFields.filter(field => !user[field]);
+
+  if (missingFields.length > 0) {
+    const missingInfoMessage = `Lo siento, falta la siguiente información en su KYC:\n\n${missingFields.map(field => `- ${field}\n`).join('')}`;
+    return ctx.reply(missingInfoMessage);
+  }
+
+  const kycBuffer = Buffer.from(user.kycarchivos, 'binary');
+  const kycFileName = `kyc-${userId}.zip`;
+  fs.writeFileSync(kycFileName, kycBuffer);
+
+  let reportMsg = `El usuario de alias @${ctx.from.username} y ID ${userId} solicita que se revise su KYC:\n\n${requiredFields.filter(field => field !== 'kycarchivos' && field !== 'facebook').map(field => `${field}: ${user[field]}\n`).join('')}`;
+
+  if (user.facebook) {
+    if (!requiredFields.includes('facebook')) {
+      reportMsg += `${requiredFields.length > 0 ? '\n' : ''}Facebook: ${user.facebook}\n`;
+    } else {
+      reportMsg += `Facebook: ${user.facebook}\n`;
+    }
+  }
+
+  const kycFile = { source: kycFileName, filename: `kyc-${userId}.zip` };
+
+  try {
+    await ctx.telegram.sendMessage(userId, reportMsg);
+    await ctx.telegram.sendDocument(userId, kycFile, { caption: 'Aquí está tu KYC.' });
+
+    const buttons = [
+      { text: 'Si, todo bien', callback_data: 'kyc_approval' },
+      { text: 'No, editar', callback_data: 'kyc_edit' }
+    ];
+
+    const message = 'Su solicitud de KYC será enviada a revisión. Recibiras una respuesta en un plazo de 24 a 48 horas. Gracias por su paciencia. ¿Está todo bien con su KYC?';
+
+    const markup = { inline_keyboard: [ buttons ] };
+
+    ctx.telegram.sendMessage(userId, message, { reply_markup: markup });
+
+  } catch (error) {
+    console.error(error);
+    ctx.reply(`Lo siento, ha ocurrido un error al enviar su solicitud de KYC a revisión.`);
+  } finally {
+    fs.unlinkSync(kycFileName);
+  }
+});
 
 
-// Si todo esta bien se envia al grupo de revisiones
 
+
+
+
+// Si todo está bien, se envía al grupo de revisiones 
 
 bot.action('kyc_approval', async (ctx) => {
   try {
@@ -1688,6 +1646,6 @@ bot.action('salir', (ctx) => {
   ctx.editMessageText('Has cerrado el menú de comandos.');
 });
 
-
+  
 
 bot.launch();
