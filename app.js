@@ -54,6 +54,11 @@ const { crearTabla } = require('./reportar/tablareporte');
 // Crear tabla de reportes en PostgreSQL
 crearTabla();
 
+// Importar el módulo update.js
+const updateKyc = require('./update.js');
+
+
+
   
 
 // IMPORTACION para el KYC 
