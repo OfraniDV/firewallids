@@ -4,24 +4,25 @@ async function createKycTable() {
   try {
     const query = `
       CREATE TABLE IF NOT EXISTS kycfirewallids (
-        id SERIAL PRIMARY KEY,
-        user_id BIGINT NOT NULL UNIQUE,
-        name TEXT,
-        identity_number VARCHAR(20),
-        phone_number VARCHAR(20),
-        email VARCHAR(100),
-        address TEXT,
-        municipality VARCHAR(50),
-        province VARCHAR(50),
-        kycarchivos BYTEA,
-        facebook TEXT,
-        terms_accepted BOOLEAN ,
-        pending BOOLEAN ,
-        approved BOOLEAN ,
-        rejected BOOLEAN ,
-        admin_id BIGINT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        id SERIAL,
+    user_id BIGINT NOT NULL UNIQUE,
+    name TEXT,
+    identity_number VARCHAR(20),
+    phone_number VARCHAR(20),
+    email VARCHAR(100),
+    address TEXT,
+    municipality VARCHAR(50),
+    province VARCHAR(50),
+    kycarchivos BYTEA,
+    facebook TEXT,
+    terms_accepted BOOLEAN,
+    pending BOOLEAN,
+    approved BOOLEAN,
+    rejected BOOLEAN,
+    admin_id BIGINT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id)
       )
     `;
     await pool.query(query);
