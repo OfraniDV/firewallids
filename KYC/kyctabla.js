@@ -4,33 +4,39 @@ async function createKycTable() {
   try {
     const query = `
       CREATE TABLE IF NOT EXISTS kycfirewallids (
-        id SERIAL,
-    user_id BIGINT NOT NULL UNIQUE,
-    name TEXT,
-    identity_number VARCHAR(20),
-    phone_number VARCHAR(20),
-    email VARCHAR(100),
-    address TEXT,
-    municipality VARCHAR(50),
-    province VARCHAR(50),
-    kycarchivos BYTEA,
-    facebook TEXT,
-    terms_accepted BOOLEAN,
-    pending BOOLEAN,
-    approved BOOLEAN,
-    rejected BOOLEAN,
-    admin_id BIGINT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id)
-      )
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL UNIQUE,
+        name TEXT,
+        identity_number VARCHAR(20),
+        phone_number VARCHAR(20),
+        email VARCHAR(100),
+        address TEXT,
+        municipality VARCHAR(50),
+        province VARCHAR(50),
+        kycarchivos BYTEA,
+        facebook TEXT,
+        terms_accepted BOOLEAN,
+        pending BOOLEAN,
+        approved BOOLEAN,
+        rejected BOOLEAN,
+        admin_id BIGINT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
     `;
+
+    // Reiniciar la secuencia para la columna "id"
+    const resetSeq = `SELECT setval(pg_get_serial_sequence('kycfirewallids','id'), coalesce(max(id),0)+1, false) FROM kycfirewallids;`;
+
     await pool.query(query);
+    await pool.query(resetSeq);
+
     console.log('Tabla KYC creada exitosamente!');
   } catch (err) {
     console.error('Error creando tabla KYC:', err.message);
   }
 }
+
 
 async function insertKycData(userId, name, identityNumber, phoneNumber, email, address, municipality, province, idCardFront, idCardBack, selfiePhoto, depositPhoto, facebook, termsAccepted, pending, approved, rejected, adminId) {
   const { text, values } = {
