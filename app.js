@@ -883,7 +883,7 @@ bot.action('enviarRevisiones', async (ctx) => {
   const user = userResult.rows[0];
 
   if (!user) {
-    return ctx.reply(`Lo siento, no se encontró información de KYC para su usuario. Por favor, envíe su información de KYC a través del comando /kyc.`);
+    return ctx.reply(`Lo siento, no se encontró información de KYC para su usuario. Por favor, envíe su información de KYC`);
   }
 
   if (user.approved) {
