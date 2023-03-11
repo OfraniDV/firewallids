@@ -38,7 +38,7 @@ async function obtenerCambiosUsuario(id) {
   const { rows: nombreRows } = await pool.query(queryNombre, [id]);
 
   if (usuarioRows.length === 0 && nombreRows.length === 0) {
-    return `Aún no he visto los cambios de ID ${id}. 😔`;
+    return `Aún no he visto los cambios del ID ${id}\nTe sugiero que lo agregues en algun grupo donde esta el bot ReputacionPLus o le reenvies un mensaje al Bot para que comience a monitorizar los cambios de ese usuario. 😔`;
   }
   let reporte = "";
   if (usuarioRows.length > 0) {
