@@ -275,8 +275,10 @@ bot.action('aceptoTerminos', async (ctx) => {
   const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [userId]);
 
   if (user.rows.length === 0) {
-    // Si el usuario no existe en la tabla, insertar una nueva fila
-    await pool.query('INSERT INTO kycfirewallids (user_id, terms_accepted) VALUES ($1, true)', [userId]);
+    // Si el usuario no existe en la tabla, insertar una nueva fila con el próximo valor de id disponible
+    const lastId = await pool.query('SELECT id FROM kycfirewallids ORDER BY id DESC LIMIT 1');
+    const nextId = lastId.rows[0].id + 1;
+    await pool.query('INSERT INTO kycfirewallids (id, user_id, terms_accepted) VALUES ($1, $2, true)', [nextId, userId]);
   } else {
     // Si el usuario ya existe en la tabla, actualizar la columna de términos
     await pool.query('UPDATE kycfirewallids SET terms_accepted = true WHERE user_id = $1', [userId]);
