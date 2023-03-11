@@ -1260,15 +1260,14 @@ bot.action('usuarios', async (ctx) => {
   submenuMessageId = submenuMessage.message_id; // guardar el message_id del mensaje del submenú
 });
 
+
 // Manejador de acción para el botón "Regresar" del menú de usuarios
 bot.action('menu_anterior', async (ctx) => {
-  // Eliminar los mensajes anteriores (menú de comandos y submenú)
-  await ctx.deleteMessage(comandosMessageId);
-  await ctx.deleteMessage(submenuMessageId);
+  // Eliminar el mensaje actual
+  await ctx.deleteMessage();
 
   // Mostrar el menú de comandos
-  const comandosMessage = await ctx.reply('Selecciona una opción:', comandosOptions);
-  comandosMessageId = comandosMessage.message_id; // guardar el message_id del mensaje del menú de comandos
+  await ctx.reply('Selecciona una opción:', comandosOptions);
 });
 
 
