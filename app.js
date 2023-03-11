@@ -271,23 +271,22 @@ bot.action('aceptoTerminos', async (ctx) => {
   const userId = BigInt(ctx.from.id);
   console.log('User ID:', userId);
 
-  // Verificar si el usuario ya existe en la tabla
-  const user = await pool.query('SELECT * FROM kycfirewallids WHERE user_id = $1', [userId]);
-
-  if (user.rows.length === 0) {
-    // Si el usuario no existe en la tabla, insertar una nueva fila con el próximo valor de id disponible
-    const lastId = await pool.query('SELECT id FROM kycfirewallids ORDER BY id DESC LIMIT 1');
-    const nextId = lastId.rows[0].id + 1;
-    await pool.query('INSERT INTO kycfirewallids (id, user_id, terms_accepted) VALUES ($1, $2, true)', [nextId, userId]);
-  } else {
-    // Si el usuario ya existe en la tabla, actualizar la columna de términos
-    await pool.query('UPDATE kycfirewallids SET terms_accepted = true WHERE user_id = $1', [userId]);
+  try {
+    // Insertar una nueva fila con el próximo valor de id disponible
+    await pool.query(`
+      INSERT INTO kycfirewallids (id, user_id, terms_accepted)
+      SELECT COALESCE(MAX(id), 0) + 1, $1, true FROM kycfirewallids
+      ON CONFLICT (user_id) DO NOTHING
+    `, [userId]);
+  } catch (err) {
+    console.error('Error al insertar nueva fila en la tabla KYC:', err.message);
   }
 
   ctx.answerCbQuery();
   ctx.deleteMessage();
   ctx.reply('¡Gracias por aceptar los términos y condiciones! Por favor, ingrese la siguiente información para completar el proceso KYC:', kycMenu);
 });
+
 
 
 // Manejador del evento callback_query para el botón "No Acepto"
