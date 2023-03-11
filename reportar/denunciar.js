@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const { pool } = require('../psql/db');
 
@@ -17,7 +18,7 @@ async function denunciar(ctx) {
   let origenMensaje = '';
   let groupInviteLink = '';
   if (chatType === 'group' || chatType === 'supergroup') {
-    origenMensaje = `Este mensaje fue enviado desde el grupo "${chatTitle}" (${chatId}).`;
+    origenMensaje = `Este mensaje fue enviado desde el grupo ${chatTitle} (${chatId}).`;
 
     // Obtener enlace de invitación del chat que nunca expira
     const chatInviteLink = await ctx.telegram.createChatInviteLink(chatId, { expire_date: 0 });
