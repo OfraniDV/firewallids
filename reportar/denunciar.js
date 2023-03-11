@@ -1,8 +1,7 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const { pool } = require('../psql/db');
-
-const bot = new Telegraf(process.env.BOT_TOKEN, { allow_callback_query: true });
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
 async function denunciar(ctx) {
   const userId = ctx.from.id;
@@ -18,16 +17,16 @@ async function denunciar(ctx) {
   let origenMensaje = '';
   let groupInviteLink = '';
   if (chatType === 'group' || chatType === 'supergroup') {
-    origenMensaje = `Este mensaje fue enviado desde el grupo ${chatTitle} (${chatId}).`;
+    origenMensaje = `Este mensaje fue enviado desde el grupo ${chatTitle}.`;
 
     // Obtener enlace de invitación del chat que nunca expira
-    const chatInviteLink = await ctx.telegram.createChatInviteLink(chatId, { expire_date: 0 });
+    const chatInviteLink = await ctx.telegram.exportChatInviteLink(chatId);
 
     // Obtener ID del mensaje actual o del mensaje que se está respondiendo
     const messageId = ctx.message.reply_to_message ? ctx.message.reply_to_message.message_id : ctx.message.message_id;
 
     // Concatenar el enlace de invitación del chat y el ID del mensaje para crear un enlace directo al mensaje
-    groupInviteLink = `Enlace de invitación al mensaje: ${chatInviteLink.invite_link}/${messageId}`;
+    groupInviteLink = `Enlace al grupo: ${chatInviteLink}\nEnlace al mensaje: https://t.me/c/${chatId.toString().slice(4)}/${messageId}`;
   } else if (chatType === 'private') {
     origenMensaje = `Este mensaje fue enviado desde un chat privado con el bot.`;
   }
@@ -61,3 +60,4 @@ async function denunciar(ctx) {
 }
 
 module.exports = { denunciar };
+
