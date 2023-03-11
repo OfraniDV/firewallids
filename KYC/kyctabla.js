@@ -20,8 +20,8 @@ async function createKycTable() {
         approved BOOLEAN ,
         rejected BOOLEAN ,
         admin_id BIGINT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `;
     await pool.query(query);
