@@ -40,13 +40,13 @@ async function denunciar(ctx) {
 
     const ticket = res.rows[0].ticket;
     console.log(`Nuevo reporte recibido. El número de ticket es: ${ticket}`);
-    await ctx.replyWithMarkdown(`¡Tu reporte se ha enviado a los administradores! Tu número de ticket es: \`${ticket}\` 🎫`);
+    await ctx.reply(`¡Tu reporte se ha enviado a los administradores! Tu número de ticket es: \`${ticket}\` 🎫`);
 
     const mensajeAdmin = `🔔 Nuevo reporte recibido. El número de ticket es: ${ticket}\n📢 *Reporte de usuario* 📢\n👤 Usuario: ${ctx.from ? ctx.from.first_name : 'Nombre de usuario no disponible'} (${userId})\n\n📩 Mensaje: ${mensajeCompleto}`;
     const adminList = [process.env.ID_GROUP_ADMIN];
     for (let admin of adminList) {
       try {
-        const sentMessage = await ctx.telegram.sendMessage(admin, mensajeAdmin, { parse_mode: 'Markdown' });
+        const sentMessage = await ctx.telegram.sendMessage(admin, mensajeAdmin);
         await ctx.telegram.pinChatMessage(admin, sentMessage.message_id);
       } catch (err) {
         console.log(err);
@@ -60,4 +60,5 @@ async function denunciar(ctx) {
 }
 
 module.exports = { denunciar };
+
 

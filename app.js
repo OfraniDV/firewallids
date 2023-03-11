@@ -64,9 +64,18 @@ const { mostrarMenu, despedida, iniciarProceso } = require('./KYC/kycpresentacio
 const { lsverificadosCommand } = require('./KYC/listarverificados');
 const { updateUsers } = require('./KYC/updateusers');
 
+
+
+
 // Importacion para la Lista Negra
 // Importamos la función cleanGroups desde el archivo donde la definiste
 const { cleanGroups } = require('./listanegra/clean');
+const { capturar } = require('./listanegra/capturar');
+
+
+
+
+
 
 // Actualizar a BRPlus
 
@@ -204,6 +213,9 @@ bot.command('clean', async (ctx) => {
   }, 1000);
 });
 
+
+// COMANDO CAPTURAR //
+bot.command('capturar', capturar);
 
 
 
