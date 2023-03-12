@@ -3,6 +3,7 @@ require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const { pool } = require('../psql/db');
 const { escape } = require('lodash');
+const { md, escapeMarkdown } = require('telegram-escape');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -26,10 +27,14 @@ async function resolverTicket(ctx) {
 
     const { user_id, reporte } = res.rows[0];
 
-    const mensajeUsuario = `🎫 *Ticket resuelto* 🎫\n\nTu ticket con número ${ticket} ha sido resuelto:\n\n📩 Mensaje enviado: ${reporte}\n\n✅ Solución: ${solucion}\n\nSi tienes alguna otra duda, no dudes en contactarnos nuevamente.\n\nBot Reputación Plus y Firewallids`;
+    const mensajeUsuario = `🎫 *Ticket resuelto* 🎫\n\nTu ticket con número ${ticket} ha sido resuelto:\n\n📩 Mensaje enviado: ${escapeMarkdown(reporte)}\n\n✅ Solución: ${escapeMarkdown(solucion)}\n\nSi tienes alguna otra duda, no dudes en contactarnos nuevamente.\n\nBot Reputación Plus y Firewallids`;
 
-    await ctx.telegram.sendMessage(user_id, mensajeUsuario, { parse_mode: 'Markdown' });
-    await ctx.reply(`El ticket #${ticket} ha sido resuelto con éxito.`);
+    try {
+      await ctx.telegram.sendMessage(user_id, mensajeUsuario, { parse_mode: 'Markdown' });
+      await ctx.reply(`El ticket #${ticket} ha sido resuelto con éxito.`);
+    } catch (err) {
+      await ctx.reply(`No se pudo enviar un mensaje al usuario porque no tiene un chat en privado conmigo 🧐 pero he cerrado el ticket ✅.`);
+    }
   } catch (err) {
     console.log(err.stack);
   } finally {
