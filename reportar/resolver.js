@@ -31,10 +31,12 @@ async function resolverTicket(ctx) {
 
     try {
       await ctx.telegram.sendMessage(user_id, mensajeUsuario, { parse_mode: 'Markdown' });
-      await ctx.reply(`El ticket #${ticket} ha sido resuelto con éxito.`);
     } catch (err) {
-      await ctx.reply(`No se pudo enviar un mensaje al usuario porque no tiene un chat en privado conmigo 🧐 pero he cerrado el ticket ✅.`);
+      console.log(err);
+      await ctx.reply(`No pude enviar un mensaje al usuario porque no tiene un chat en privado conmigo 🧐 pero he cerrado el ticket ✅.`);
     }
+
+    await ctx.reply(`Hemos cerrado el ticket: ${ticket}`);
   } catch (err) {
     console.log(err.stack);
   } finally {
