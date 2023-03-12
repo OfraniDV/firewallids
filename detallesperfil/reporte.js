@@ -35,6 +35,11 @@ async function perfil(ctx) {
     }
   }
 
+  // Si no se proporcionó un ID o alias y no se está respondiendo a un mensaje, usar el ID del usuario que ejecuta el comando
+  if (!userID && !ctx.message.reply_to_message) {
+    userID = ctx.from.id;
+  }
+
 
   // Obtener información de identidad del usuario
   const identidad = await checkIdentidad(userID);
