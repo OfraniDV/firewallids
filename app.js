@@ -340,16 +340,25 @@ bot.command('lsverificados', async (ctx) => {
 
 bot.command('notificar', async (ctx) => {
   const args = ctx.message.text.split(' ');
-  
-  // Verificar si se proporcionó un ID
-  if (!args[1]) {
-    ctx.reply('⚠️ Es necesario especificar un ID para enviar el mensaje.');
+
+  // Verificar si se proporcionó un ID o un alias
+  let id = args[1];
+  if (!id) {
+    ctx.reply('⚠️ Es necesario especificar un ID o un alias para enviar el mensaje.');
+    return;
+  } else if (id.startsWith('@')) {
+    id = await findIdByAlias(id.substring(1));
+    if (!id) {
+      ctx.reply(`No se pudo encontrar el ID para el alias "${args[1]}". Por favor, asegúrate de que el alias es válido.`);
+      return;
+    }
+  } else if (isNaN(id)) {
+    ctx.reply('⚠️ El ID proporcionado no es válido.');
     return;
   }
 
-  const id = parseInt(args[1]);
   const mensaje = args.slice(2).join(' ');
-  
+
   // Verificar si el usuario que ejecuta el comando es un administrador
   const { rows: adminRows } = await pool.query(`
     SELECT * FROM listanegra_administradores WHERE id = $1;
@@ -360,22 +369,16 @@ bot.command('notificar', async (ctx) => {
     return;
   }
 
-  // Verificar si el ID es válido
-  if (isNaN(id)) {
-    ctx.reply('⚠️ El ID proporcionado no es válido.');
-    return;
-  }
-
   // Verificar si el usuario existe en Telegram
   const telegramUser = await ctx.telegram.getChat(id).catch(() => null);
   if (!telegramUser) {
-    ctx.reply('⚠️ El usuario con el ID proporcionado no existe en Telegram.');
+    ctx.reply(`⚠️ No se pudo enviar el mensaje al usuario con ID ${id} porque no existe en Telegram o ha eliminado nuestro chat privado ${emojitriste}`);
     return;
   }
 
   const adminAlias = ctx.from.username ? `@${ctx.from.username}` : ctx.from.first_name;
 
-  let mensajeFinal = `🥷¡SALUDOS!🥷\n\n Soy un *Administrador* del Bot donde solicitas que te aprueben tu KYC y necesito que entres en contacto conmigo para hacer unas comprobaciones referentes a tu solicitud de revisiones del KYC. Para ser aprobado, es necesario que nos contactes.
+  let mensajeFinal = `🥷¡ALERTA!🥷\n\n Uno de nuestros *Administradores* te ha enviado un mensaje.
   
   Administrador: ${adminAlias}`;
 
@@ -383,9 +386,14 @@ bot.command('notificar', async (ctx) => {
     mensajeFinal += `\n\n*📩 Mensaje:* ${mensaje}`;
   }
 
-  ctx.telegram.sendMessage(id, mensajeFinal, { parse_mode: "Markdown" });
-  ctx.reply('✅ Mensaje enviado.');
+  try {
+    await ctx.telegram.sendMessage(id, mensajeFinal, { parse_mode: "Markdown" });
+    ctx.reply('✅ Mensaje enviado.');
+  } catch (error) {
+    ctx.reply(`⚠️ No se pudo enviar el mensaje al usuario con ID ${id} porque no hemos interactuado previamente en un chat privado o el usuario ha eliminado nuestro chat ${emojitriste}`);
+  }
 });
+
 
 
 
