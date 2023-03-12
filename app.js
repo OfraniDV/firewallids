@@ -1238,11 +1238,19 @@ bot.start((ctx) => {
 
 // Comando para mostrar el menú inline
 bot.command('ayuda', (ctx) => {
-  return ctx.reply('Por favor selecciona una opción:', menuOptions);
+  if (ctx.chat.type === 'private') {
+    return ctx.reply('Por favor selecciona una opción:', menuOptions);
+  } else {
+    return ctx.reply('Este comando solo puede ser utilizado en chat privado con el bot.');
+  }
 });
 
 bot.command('comandos', (ctx) => {
-  return ctx.reply('Aquí están los comandos:', comandosOptions);
+  if (ctx.chat.type === 'private') {
+    return ctx.reply('Aquí están los comandos:', comandosOptions);
+  } else {
+    return ctx.reply('Este comando solo puede ser utilizado en chat privado con el bot.');
+  }
 });
 
 bot.action('comandos', (ctx) => {
