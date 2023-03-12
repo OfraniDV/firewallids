@@ -390,7 +390,7 @@ bot.command('notificar', async (ctx) => {
     await ctx.telegram.sendMessage(id, mensajeFinal, { parse_mode: "Markdown" });
     ctx.reply('✅ Mensaje enviado.');
   } catch (error) {
-    ctx.reply(`⚠️ No se pudo enviar el mensaje al usuario con ID ${id} porque no hemos interactuado previamente en un chat privado o el usuario ha eliminado nuestro chat ${emojitriste}`);
+    ctx.reply(`⚠️ No se pudo enviar el mensaje al usuario con ID ${id} porque no hemos interactuado previamente en un chat privado o el usuario ha eliminado nuestro chat 😒`);
   }
 });
 
